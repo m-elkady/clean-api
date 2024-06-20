@@ -2,48 +2,62 @@ version: "3.8"
 services:
 
   # PHP service
-  app:
-    build: ./server/docker/php
-    container_name: micro-php
-    working_dir: /var/www/
+  backend:
+    build: ./docker/php
+    container_name: backend-jobleads
+    working_dir: /var/www/backend
     volumes:
-      - ./server/:/var/www
+      - ./backend/:/var/www/backend
     networks:
-      - micro-network
+      - jobleads-network
+
+  # frontend:
+  #   build:
+  #     context: .
+  #     dockerfile: ./docker/node/Dockerfile
+  #     target: build
+  #   container_name: frontend-jobleads
+  #   volumes:
+  #     - ./frontend/:/app
+  #     - ./frontend/node_modules/:/app/node_modules
+  #   networks:
+  #     - jobleads-network
 
   # MySQL database service
   db:
     image: mysql:5.7
-    container_name: micro-mysql
+    container_name: mysql-jobleads
     ports:
       - "3306:3306"
-    environment:
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-      MYSQL_DATABASE: ${DB_DATABASE}
-      MYSQL_USER: ${DB_USERNAME}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
     env_file:
-      - ./server/.env
+      - ./backend/.env
+    environment:
+      MYSQL_ROOT_PASSWORD: "${DB_PASSWORD}"
+      MYSQL_DATABASE: "${DB_DATABASE}"
+      MYSQL_USER: "${DB_USERNAME}"
+      MYSQL_PASSWORD: "${DB_PASSWORD}"
     volumes:
       - db-data:/var/lib/mysql
     networks:
-      - micro-network
+      - jobleads-network
 
   # Nginx service
   nginx:
     image: nginx:alpine
-    container_name: micro-nginx
+    container_name: nginx-jobleads
     ports:
       - "80:80"
     volumes:
-      - ./server/:/var/www
-      - ./server/docker/nginx/:/etc/nginx/conf.d/
-      - ./server/var/log/nginx/:/var/log/nginx/
+      - ./backend/:/var/www/backend
+      # - ./frontend/dist/:/var/www/frontend
+      - ./docker/nginx/:/etc/nginx/conf.d/
+      - ./backend/var/log/nginx/:/var/log/nginx/
+      # - ./frontend/log/vue/:/var/log/vue/
     networks:
-      - micro-network
+      - jobleads-network
 
 networks:
-  micro-network:
+  jobleads-network:
     driver: bridge
 
 volumes:
