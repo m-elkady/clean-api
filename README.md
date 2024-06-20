@@ -1,4 +1,4 @@
-# Jbbleads fullstack Task
+# Jobleads fullstack Task
 
 ### Project setup
 
@@ -55,7 +55,7 @@
         DELETE /user/{id}
         ```
     
-    - ##### LIST (Paginate)
+    - ##### List (Paginate)
 
         - to paginate All users by parameters (perPage, sortBy, order)  
             ```
