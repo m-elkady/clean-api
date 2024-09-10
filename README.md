@@ -1,10 +1,10 @@
-# Jobleads fullstack Task
+# clean-api documentation
 
 ### Project setup
 
 #### Backend
 
-* Add `clean-api.localhost` to your `/etc/hosts`: `127.0.0.1 jobleads.localhost`
+* Add `clean-api.localhost` to your `/etc/hosts`: `127.0.0.1 clean-api.localhost`
 
 * Run `make init` to initialize project
 
