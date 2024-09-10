@@ -8,11 +8,11 @@
 // Composables
 import { createRouter, createWebHistory } from 'vue-router'
 
-import HelloWorld from '@/components/HelloWorld.vue'
+import Hello from '@/components/Hello.vue'
 import UsersList from '@/components/Users/UsersList.vue'
 
 const routes = [
-  { path: '/', component: HelloWorld },
+  { path: '/', component: Hello },
   { path: '/users', component: UsersList }
 ]
 
