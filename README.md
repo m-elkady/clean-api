@@ -4,11 +4,11 @@
 
 #### Backend
 
-* Add `jobleads.localhost` to your `/etc/hosts`: `127.0.0.1 jobleads.localhost`
+* Add `clean-api.localhost` to your `/etc/hosts`: `127.0.0.1 jobleads.localhost`
 
 * Run `make init` to initialize project
 
-* Open in api platform tool (POSTMAN): http://jobleads.localhost/user
+* Open in api platform tool (POSTMAN): http://clean-api.localhost/user
 
 * to consume the user api resource follow the instructions: 
 
