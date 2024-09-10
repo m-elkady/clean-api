@@ -7,13 +7,13 @@
       <v-img
         class="mb-4"
         height="150"
-        src="@/assets/logo 2.svg"
+        src="@/assets/logo.svg"
       />
 
       <div class="text-center">
         <div class="text-body-2 font-weight-light mb-n1">Welcome to</div>
 
-        <h3 class="mt-8 text-h2 font-weight-bold">Jobleads Frontend Task</h3>
+        <h3 class="mt-8 text-h2 font-weight-bold">clean-api Frontend</h3>
       </div>
 
       <div class="py-18" />
