@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const apiClient = axios.create({
-  baseURL: 'http://jobleads.localhost', // Replace with your API URL
+  baseURL: 'http://clean-api.localhost', // Replace with your API URL
   headers: {
     'Content-Type': 'application/json',
   },
