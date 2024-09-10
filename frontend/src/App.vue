@@ -2,7 +2,7 @@
   <v-app>
     <v-main>
       <v-navigation-drawer :width="281">
-        <v-list-item title="Jobleads Frontend"></v-list-item>
+        <v-list-item title="clean-api Frontend"></v-list-item>
         <v-divider></v-divider>
         <router-link to="/">
           <v-list-item link title="Home"></v-list-item>
