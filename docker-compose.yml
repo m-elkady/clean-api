@@ -4,29 +4,29 @@ services:
   # PHP service
   backend:
     build: ./docker/php
-    container_name: backend-jobleads
+    container_name: backend-clean-api
     working_dir: /var/www/backend
     volumes:
       - ./backend/:/var/www/backend
     networks:
-      - jobleads-network
+      - clean-api-network
 
   # frontend:
   #   build:
   #     context: .
   #     dockerfile: ./docker/node/Dockerfile
   #     target: build
-  #   container_name: frontend-jobleads
+  #   container_name: frontend-clean-api
   #   volumes:
   #     - ./frontend/:/app
   #     - ./frontend/node_modules/:/app/node_modules
   #   networks:
-  #     - jobleads-network
+  #     - clean-api-network
 
   # MySQL database service
   db:
     image: mysql:5.7
-    container_name: mysql-jobleads
+    container_name: mysql-clean-api
     ports:
       - "3306:3306"
     env_file:
@@ -39,12 +39,12 @@ services:
     volumes:
       - db-data:/var/lib/mysql
     networks:
-      - jobleads-network
+      - clean-api-network
 
   # Nginx service
   nginx:
     image: nginx:alpine
-    container_name: nginx-jobleads
+    container_name: nginx-clean-api
     ports:
       - "80:80"
     volumes:
@@ -54,13 +54,11 @@ services:
       - ./backend/var/log/nginx/:/var/log/nginx/
       # - ./frontend/log/vue/:/var/log/vue/
     networks:
-      - jobleads-network
+      - clean-api-network
 
 networks:
-  jobleads-network:
+  clean-api-network:
     driver: bridge
 
 volumes:
-###> doctrine/doctrine-bundle ###
   db-data:
-###< doctrine/doctrine-bundle ###
