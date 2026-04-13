@@ -8,7 +8,7 @@
 
 * Run `make init` to initialize project
 
-* Open in api platform tool (POSTMAN): http://clean-api.localhost/user
+* Open in api client tool (POSTMAN): http://clean-api.localhost/user
 
 * to consume the user api resource follow the instructions: 
 
@@ -31,7 +31,7 @@
     - ##### Get user
 
         - to read a user data from our database
-        - the default value for fieldName is id so you can consume the endpoint as fowllows: `/user/{id}` or `/user/User Last name/last_name`
+        - the default value for fieldName is `id` so you can consume the endpoint as fowllows: `/user/{id}` or `/user/{User Last name}/last_name`
         ```
         GET /user/{value}/{fieldName}
         ```
