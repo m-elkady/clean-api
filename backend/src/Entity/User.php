@@ -8,6 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\HasLifecycleCallbacks]
+#[ORM\UniqueConstraint(name: 'UNIQ_user_email', fields: ['email'])]
 class User
 {
     #[ORM\Id]
@@ -22,7 +23,7 @@ class User
     public string $lastName;
 
     #[ORM\Column(type: Types::STRING, length: 255)]
-    public string $userEmail;
+    public string $email;
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     private \DateTimeInterface $createdAt;
@@ -32,52 +33,34 @@ class User
         return $this->id;
     }
 
-    /**
-     * @return string
-     */
     public function getFirstName(): string
     {
         return $this->firstName;
     }
 
-    /**
-     * @param string $firstName
-     */
     public function setFirstName(string $firstName): void
     {
         $this->firstName = $firstName;
     }
 
-    /**
-     * @return string
-     */
     public function getLastName(): string
     {
         return $this->lastName;
     }
 
-    /**
-     * @param string $lastName
-     */
     public function setLastName(string $lastName): void
     {
         $this->lastName = $lastName;
     }
 
-    /**
-     * @return string
-     */
-    public function getUserEmail(): string
+    public function getEmail(): string
     {
-        return $this->userEmail;
+        return $this->email;
     }
 
-    /**
-     * @param string $userEmail
-     */
-    public function setUserEmail(string $userEmail): void
+    public function setEmail(string $email): void
     {
-        $this->userEmail = $userEmail;
+        $this->email = $email;
     }
 
     #[ORM\PrePersist]
