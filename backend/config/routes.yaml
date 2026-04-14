@@ -1,8 +1,8 @@
 controllers:
-    resource: ../src/Controller/
-    type: attribute
+  resource: ../src/Controller/
+  type: attribute
 
 lowestPrice:
-    path: /products/add
-    controller: App\Controller\ProductsController::add
-    methods: ['POST']
+  path: /products/add
+  controller: App\Controller\ProductsController::add
+  methods: [ 'POST' ]
