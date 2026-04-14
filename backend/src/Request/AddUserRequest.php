@@ -18,14 +18,14 @@ class AddUserRequest implements RequestValidatedInterface
     #[Assert\Email(
         message: 'The email {{ value }} is not a valid email.',
     )]
-    public string $userEmail = '';
+    public string $email = '';
 
     public static function fromArray(array $data): self
     {
         $request = new self();
-        $request->userEmail = $data['userEmail'] ?? '';
         $request->firstName = $data['firstName'] ?? '';
         $request->lastName = $data['lastName'] ?? '';
+        $request->email = $data['email'] ?? '';
 
         return $request;
     }

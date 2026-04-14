@@ -15,15 +15,16 @@ class UpdateUserRequest extends BaseRequest implements RequestValidatedInterface
     public string $lastName = '';
 
     #[Assert\NotBlank]
+    #[Assert\NotNull]
     #[Assert\Email(
         message: 'The email {{ value }} is not a valid email.',
     )]
-    public ?string $userEmail = null;
+    public ?string $email = null;
 
     public static function fromArray(array $data): self
     {
         $request = new self();
-        $request->userEmail = $data['userEmail'] ?? null;
+        $request->email = $data['email'] ?? null;
         $request->firstName = $data['firstName'] ?? '';
         $request->lastName = $data['lastName'] ?? '';
 

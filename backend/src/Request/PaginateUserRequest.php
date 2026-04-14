@@ -9,30 +9,30 @@ class PaginateUserRequest extends BaseRequest implements RequestValidatedInterfa
 {
     public ?int $page = 1;
     public ?int $perPage = Constants::PAGE_LIMIT;
-    
+
     #[Assert\Choice(
-        choices: ['id', 'firstName', 'lastName', 'userEmail'],
+        choices: ['id', 'firstName', 'lastName', 'email'],
         message: 'Invalid sort by field',
     )]
     public ?string $sortBy = 'id';
     public ?string $order = 'asc';
     public ?string $firstName;
     public ?string $lastName;
-    public ?string $userEmail;
+    public ?string $email;
 
-    public $queryParams = ['firstName', 'lastName', 'userEmail'];
+    public $queryParams = ['firstName', 'lastName', 'email'];
 
 
     public static function fromArray(array $data): self
     {
         $request = new self();
         $request->page = $data['page'] ?? 1;
-        $request->perPage = $data['perPage'] ?? Constants::PAGE_LIMIT;
+        $request->perPage = $data['perPage'] ?? $request->perPage;
         $request->sortBy = $data['sortBy'] ?? 'id';
         $request->order = $data['order'] ?? 'asc';
         $request->firstName = $data['firstName'] ?? null;
         $request->lastName = $data['lastName'] ?? null;
-        $request->userEmail = $data['userEmail'] ?? null;
+        $request->email = $data['email'] ?? null;
 
         return $request;
     }
