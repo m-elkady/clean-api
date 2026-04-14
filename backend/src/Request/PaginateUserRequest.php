@@ -3,8 +3,6 @@
 namespace App\Request;
 
 use App\Service\Constants;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 
 class PaginateUserRequest extends BaseRequest implements RequestValidatedInterface
@@ -48,10 +46,5 @@ class PaginateUserRequest extends BaseRequest implements RequestValidatedInterfa
             }
         }
         return $queryParams;
-    }
-
-    public function validated(): object
-    {
-        return $this;
     }
 }

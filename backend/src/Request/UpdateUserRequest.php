@@ -3,7 +3,6 @@
 namespace App\Request;
 
 use Symfony\Component\Validator\Constraints as Assert;
-use App\Dto\UserData;
 
 class UpdateUserRequest extends BaseRequest implements RequestValidatedInterface
 {
@@ -29,18 +28,5 @@ class UpdateUserRequest extends BaseRequest implements RequestValidatedInterface
         $request->lastName = $data['lastName'] ?? '';
 
         return $request;
-    }
-    
-    function validated(): UserData
-    {
-        $userData = new UserData(
-            id: 0,
-            firstName: $this->firstName,
-            lastName: $this->lastName,
-            userEmail: $this->userEmail ?? '',
-            createdAt: ''
-        );
-
-        return $userData;
     }
 }
