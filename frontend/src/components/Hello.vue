@@ -16,11 +16,11 @@
         <h3 class="mt-8 text-h2 font-weight-bold">clean-api Frontend</h3>
       </div>
 
-      <div class="py-18" />
+      <div class="py-18"/>
     </v-responsive>
   </v-container>
 </template>
 
 <script setup>
-  //
+//
 </script>
