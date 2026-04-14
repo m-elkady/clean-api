@@ -8,15 +8,16 @@ use Symfony\Component\HttpFoundation\Response;
 class AppResponse
 {
     public function __construct(
-        public readonly bool $success,
-        public readonly mixed $data = null,
-        public readonly mixed $errors = null,
+        public readonly bool   $success,
+        public readonly mixed  $data = null,
+        public readonly mixed  $errors = null,
         public readonly string $message = '',
-        public readonly int $code = 200
-    ) {
+        public readonly int    $code = 200
+    )
+    {
     }
 
-     public static function success(mixed $data = null, int $status = Response::HTTP_OK): JsonResponse
+    public static function success(mixed $data = null, int $status = Response::HTTP_OK): JsonResponse
     {
         return new JsonResponse([
             'success' => true,
