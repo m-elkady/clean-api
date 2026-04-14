@@ -2,27 +2,45 @@
 
 namespace App\Request;
 
-use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Constraints as Assert;
+use App\Dto\UserData;
 
-class UpdateUserRequest extends BaseRequest
+class UpdateUserRequest extends BaseRequest implements RequestValidatedInterface
 {
     #[Assert\NotBlank]
     #[Assert\NotNull]
-    public string $firstName;
+    public string $firstName = '';
 
     #[Assert\NotBlank]
     #[Assert\NotNull]
-    public string $lastName;
+    public string $lastName = '';
 
     #[Assert\NotBlank]
     #[Assert\Email(
         message: 'The email {{ value }} is not a valid email.',
     )]
-    public ?string $userEmail;
+    public ?string $userEmail = null;
 
-    public static function fromJson(string $json, SerializerInterface $serializer): self
+    public static function fromArray(array $data): self
     {
-        return $serializer->deserialize($json, self::class, 'json');
+        $request = new self();
+        $request->userEmail = $data['userEmail'] ?? null;
+        $request->firstName = $data['firstName'] ?? '';
+        $request->lastName = $data['lastName'] ?? '';
+
+        return $request;
+    }
+    
+    function validated(): UserData
+    {
+        $userData = new UserData(
+            id: 0,
+            firstName: $this->firstName,
+            lastName: $this->lastName,
+            userEmail: $this->userEmail ?? '',
+            createdAt: ''
+        );
+
+        return $userData;
     }
 }

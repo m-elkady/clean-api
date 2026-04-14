@@ -7,51 +7,51 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 
-class PaginateUserRequest extends BaseRequest
+class PaginateUserRequest extends BaseRequest implements RequestValidatedInterface
 {
     public ?int $page = 1;
     public ?int $perPage = Constants::PAGE_LIMIT;
+    
     #[Assert\Choice(
         choices: ['id', 'firstName', 'lastName', 'userEmail'],
         message: 'Invalid sort by field',
     )]
     public ?string $sortBy = 'id';
     public ?string $order = 'asc';
-
     public ?string $firstName;
     public ?string $lastName;
     public ?string $userEmail;
 
     public $queryParams = ['firstName', 'lastName', 'userEmail'];
 
-    public static function fromRequest(Request $request, SerializerInterface $serializer)
+
+    public static function fromArray(array $data): self
     {
-        $page = $request->query->getInt('page', 1);
-        $perPage = $request->query->get('perPage', Constants::PAGE_LIMIT);
-        $sortBy = $request->query->get('sortBy', 'id');
-        $order = $request->query->get('order', 'asc');
+        $request = new self();
+        $request->page = $data['page'] ?? 1;
+        $request->perPage = $data['perPage'] ?? Constants::PAGE_LIMIT;
+        $request->sortBy = $data['sortBy'] ?? 'id';
+        $request->order = $data['order'] ?? 'asc';
+        $request->firstName = $data['firstName'] ?? null;
+        $request->lastName = $data['lastName'] ?? null;
+        $request->userEmail = $data['userEmail'] ?? null;
 
-        $firstName = $request->query->get('firstName');
-        $lastName = $request->query->get('lastName');
-        $userEmail = $request->query->get('userEmail');
-
-
-        $paginateOptions = ['page' => $page, 'perPage' => $perPage, 'sortBy' => $sortBy, 'order' => $order];
-        $queryOptions = ['firstName' => $firstName, 'lastName' => $lastName, 'userEmail' => $userEmail];
-
-        $data = json_encode(array_merge($paginateOptions, $queryOptions));
-
-        return $serializer->deserialize($data, self::class, 'json');
+        return $request;
     }
 
     public function getQueryOptions(): array
     {
         $queryParams = [];
-        foreach ($this->getAttributesValues() as $key => $value) {
-            if (in_array($key, $this->queryParams)) {
-                $queryParams[$key] = $value;
+        foreach ($this->queryParams as $key) {
+            if (!empty($this->$key)) {
+                $queryParams[$key] = $this->$key;
             }
         }
         return $queryParams;
+    }
+
+    public function validated(): object
+    {
+        return $this;
     }
 }
