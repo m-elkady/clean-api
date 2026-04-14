@@ -54,6 +54,17 @@ class UserRepository extends ServiceEntityRepository
         return $deleted;
     }
 
+    public function findByEmailExcludingId(string $email, int $excludeId): ?User
+    {
+        return $this->createQueryBuilder('u')
+            ->where('u.email = :email')
+            ->andWhere('u.id != :id')
+            ->setParameter('email', $email)
+            ->setParameter('id', $excludeId)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
     public function findAll(?array $paginateOptions = [], ?array $queryOptions = []): Paginator
     {
         // Paginate Options
