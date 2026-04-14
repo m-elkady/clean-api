@@ -2,106 +2,95 @@
 
 namespace App\Service;
 
+use App\Dto\UserData;
 use App\Entity\User;
-use App\Repository\UserRepository;
 use App\Request\AddUserRequest;
-use App\Request\GetUserRequest;
 use App\Request\PaginateUserRequest;
 use App\Request\UpdateUserRequest;
-use App\Response\AddUserResponse;
-use App\Response\BaseResponse;
-use App\Response\DeleteUserResponse;
-use App\Response\ErrorResponse;
-use App\Response\GetUserResponse;
-use App\Response\PaginateUserResponse;
-use App\Response\UpdateUserResponse;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
+use App\Repository\UserRepository;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class UserService
 {
     public function __construct(
-        private readonly UserRepository     $userRepository,
-        private readonly ValidatorInterface $validator,
-        private readonly Serializer $serializer,
+        private readonly UserRepository $userRepository
     ) {
     }
 
-    public function add(AddUserRequest $request): BaseResponse
+    public function create(AddUserRequest $request): UserData
     {
-        $errors = $request->getValidationErrors(
-            $this->validator->validate($request)
-        );
-
-        if (!empty($errors)) {
-            return new ErrorResponse("Wrong Data! Please fix the errors and try again.", 400, $errors);
-        }
-
         $user = new User();
-        $user->setData($request->getAttributesValues());
+        $user->setFirstName($request->firstName);
+        $user->setLastName($request->lastName);
+        $user->setUserEmail($request->userEmail);
+
         $this->userRepository->add($user);
 
-        return new AddUserResponse($user);
+        return UserData::fromEntity($user);
     }
 
-    public function update(int $id, UpdateUserRequest $request): BaseResponse
+    public function update(int $id, UpdateUserRequest $request): UserData
     {
         $user = $this->userRepository->find($id);
 
         if (!$user) {
-            return new ErrorResponse("User not fount!", 404);
+            throw new NotFoundHttpException('User not found');
         }
 
-        $errors = $request->getValidationErrors($this->validator->validate($request));
+        $user->setFirstName($request->firstName);
+        $user->setLastName($request->lastName);
+        $user->setUserEmail($request->userEmail ?? $user->getUserEmail());
 
-        if (!empty($errors)) {
-            return new ErrorResponse("Wrong Data! Please fix the errors and try again.", 400, $errors);
-        }
-
-        $user->setData($request->getAttributesValues());
         $this->userRepository->getEntityManager()->flush();
 
-        return new UpdateUserResponse($user);
+        return UserData::fromEntity($user);
     }
 
-    public function delete(int $id): BaseResponse
+    public function delete(int $id): void
     {
         $user = $this->userRepository->find($id);
 
         if (!$user) {
-            return new ErrorResponse("User not found.", 404);
+            throw new NotFoundHttpException('User not found');
         }
 
         $this->userRepository->remove($user);
-        return new DeleteUserResponse();
     }
 
-    public function get(GetUserRequest $request): BaseResponse
+    public function findOneBy(string $value, string $field = 'id'): ?UserData
     {
-        if (empty($request->getAttributesValues())) {
-            return new ErrorResponse("Wrong Data! Please fix the errors and try again.", 400);
-        }
-
-        $user = $this->userRepository->findOneBy($request->getAttributesValues());
+        $user = $this->userRepository->findOneBy([$field => $value]);
 
         if (!$user) {
-            return new ErrorResponse("User not found.", 404);
+            return null;
         }
 
-        return new GetUserResponse($user);
+        return UserData::fromEntity($user);
     }
 
-    public function paginate(PaginateUserRequest $request): BaseResponse
+    public function paginate(PaginateUserRequest $request): array
     {
-        $errors = $request->getValidationErrors(
-            $this->validator->validate($request)
+        $paginator = $this->userRepository->findAll(
+            [
+                'page' => $request->page,
+                'perPage' => $request->perPage,
+                'sortBy' => $request->sortBy,
+                'order' => $request->order,
+            ],
+            $request->getQueryOptions()
         );
 
-        if (!empty($errors)) {
-            return new ErrorResponse("Wrong Data! Please fix the errors and try again.", 400, $errors);
+        $users = [];
+        
+        foreach ($paginator as $user) {
+            $users[] = UserData::fromEntity($user);
         }
 
-        $paginator = $this->userRepository->findAll($request->getAttributes(), $request->getQueryOptions());
-        
-        return new PaginateUserResponse($this->serializer, $paginator, $request->page, $request->perPage);
+        return [
+            'users' => $users,
+            'count' => count($paginator),
+            'currentPage' => $request->page,
+            'limit' => $request->perPage,
+        ];
     }
 }
