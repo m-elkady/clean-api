@@ -18,7 +18,7 @@
                         <v-text-field v-model="queryParams.lastName" label="Lastname"></v-text-field>
                     </v-col>
                     <v-col cols="3">
-                        <v-text-field v-model="queryParams.userEmail" label="Email"></v-text-field>
+                        <v-text-field v-model="queryParams.email" label="Email"></v-text-field>
                     </v-col>
                     <v-col cols="3">
                         <v-row>
@@ -40,8 +40,8 @@
                             <th width="20%" class="text-left" @click="sortBy('lastName')" style="cursor: pointer;">
                                 Last Name <v-icon small> {{ sortIcon('lastName') }} </v-icon>
                             </th>
-                            <th width="20%" class="text-left" @click="sortBy('userEmail')" style="cursor: pointer;">
-                                Email <v-icon small> {{ sortIcon('userEmail') }} </v-icon>
+                            <th width="20%" class="text-left" @click="sortBy('email')" style="cursor: pointer;">
+                                Email <v-icon small> {{ sortIcon('email') }} </v-icon>
                             </th>
                             <th class="text-left">Actions</th>
                         </tr>
@@ -50,7 +50,7 @@
                         <tr v-for="user in users" :key="user.id">
                             <td>{{ user.first_name }}</td>
                             <td>{{ user.last_name }}</td>
-                            <td>{{ user.user_email }}</td>
+                            <td>{{ user.email }}</td>
                             <td>
                                 <v-btn class="mr-2" color="warning" @click="goToEdit(user.id)">Edit</v-btn>
 
@@ -72,7 +72,7 @@
                         :rules="[rules.required]"></v-text-field>
                     <v-text-field v-model="dialog.data.lastName" label="Lastname"
                         :rules="[rules.required]"></v-text-field>
-                    <v-text-field type="email" v-model="dialog.data.userEmail" label="Email"
+                    <v-text-field type="email" v-model="dialog.data.email" label="Email"
                         :rules="[rules.required, rules.email]"></v-text-field>
                 </v-card-text>
                 <v-card-actions>
@@ -111,7 +111,7 @@ const queryParams = JSON.parse(localStorage.getItem('queryParams')) || {
     order: 'asc',
     firstName: '',
     lastName: '',
-    userEmail: '',
+    email: '',
 };
 const dialogRules = {
     rules: {
@@ -178,12 +178,12 @@ export default {
             }
         },
         goToCreate() {
-            const userData = { id: '', firstName: '', lastName: '', userEmail: '' };
+            const userData = { id: '', firstName: '', lastName: '', email: '' };
             this.dialog = { ...this.dialog, ...{ title: 'Create New User', icon: 'mdi-plus', visible: true, data: userData } }
         },
         async goToEdit(id) {
             const response = (await api.getUser(id)).data;
-            const userData = { id: response.id, firstName: response.first_name, lastName: response.last_name, userEmail: response.user_email };
+            const userData = { id: response.id, firstName: response.first_name, lastName: response.last_name, email: response.email };
             this.dialog = { ...this.dialog, ...{ title: 'Edit User', icon: 'mdi-pencil', visible: true, data: userData } }
         },
         async save() {
@@ -228,13 +228,13 @@ export default {
             this.fetchUsers();
         },
         async clear() {
-            this.queryParams = { ...this.queryParams, ...{ page: 1, firstName: '', lastName: '', userEmail: '' } };
+            this.queryParams = { ...this.queryParams, ...{ page: 1, firstName: '', lastName: '', email: '' } };
             this.fetchUsers();
         },
         sortBy(key) {
             let order = this.queryParams.order;
             let sortBy = this.queryParams.sortBy;
-            
+
             if (sortBy === key) {
                 order = this.queryParams.order === 'asc' ? 'desc' : 'asc';
             } else {
@@ -247,7 +247,7 @@ export default {
         },
         sortIcon(key) {
             const sortBy = this.queryParams.sortBy;
- 
+
             if (sortBy !== key) return 'mdi-sort';
             return this.queryParams.order === 'asc' ? 'mdi-arrow-up' : 'mdi-arrow-down';
         },
