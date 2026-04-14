@@ -4,26 +4,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Clean API is a full-stack application with a Symfony 7.4/PHP 8.4 backend and Vue 3/Vuetify frontend, demonstrating clean
-architecture patterns with clear separation of concerns.
+Clean API is a full-stack application with Symfony 7.4/PHP 8.4 backend and Vue 3/Vuetify frontend, demonstrating clean architecture patterns with clear separation of concerns.
 
 ## Development Commands
 
 ### Initial Setup
-
 ```bash
 make init              # Build containers, install deps, run migrations, load fixtures, start frontend
 ```
 
 ### Docker Operations
-
 ```bash
 make start             # Start all containers
 make stop              # Stop all containers
 ```
 
 ### Backend (run inside container via `docker exec backend-clean-api`)
-
 ```bash
 docker exec backend-clean-api composer install                    # Install PHP dependencies
 docker exec backend-clean-api php bin/console doctrine:migrations:migrate  # Run migrations
@@ -33,7 +29,6 @@ docker exec backend-clean-api php bin/console cache:clear          # Clear cache
 ```
 
 ### Frontend (run in local terminal)
-
 ```bash
 cd frontend && npm install      # Install dependencies
 npm run dev                     # Start dev server (port 3000)
@@ -47,40 +42,56 @@ npm run lint                    # Run ESLint with auto-fix
 
 ```
 Controller (HTTP handling)
-    ↓ deserializes JSON → Request DTO
-Service (business logic, validation)
-    ↓ uses
+    ↓ via custom RequestResolver
+Request DTOs (validated via Symfony Validator)
+    ↓
+Service (business logic)
+    ↓
 Repository (data access via Doctrine ORM)
-    ↓ returns
+    ↓
 Entity (doctrine-mapped domain objects)
-    ↓ wrapped in
-Response DTO (serialized to JSON)
+    ↓
+Response via AppResponse (JSON)
 ```
 
+**Custom RequestResolver Pattern:**
+
+This project uses a custom `RequestResolver` (`backend/src/Resolver/RequestResolver.php`) that automatically:
+1. Deserializes JSON/query params to Request DTOs
+2. Validates DTOs using Symfony Validator
+3. Throws `ValidationException` on validation failures
+
+Request DTOs must implement `RequestValidatedInterface`:
+```php
+interface RequestValidatedInterface
+{
+    public static function fromArray(array $data): self;
+}
+```
+
+The resolver is registered in `backend/config/services.yaml` with priority 256.
+
+**Response Pattern:**
+
+Use `AppResponse` static methods for consistent JSON responses:
+- `AppResponse::success($data)` - 200 OK
+- `AppResponse::created($data)` - 201 Created
+- `AppResponse::paginated($items, $total, $page, $perPage)` - Paginated response
+- `AppResponse::notFound($message)` - 404
+- `AppResponse::error($message, $status)` - Generic error
+
 **Key patterns:**
-
-- **Request DTOs** (`src/Request/`): Validate incoming data using Symfony Validator constraints. Include static
-  `fromJson()` for deserialization.
-- **Response DTOs** (`src/Response/`): Wrap outgoing data, extend `BaseResponse` for consistent JSON structure with
-  `success`, `message`, `code`.
-- **Services** (`src/Service/`): Contain business logic, validate requests via `ValidatorInterface`, return Response
-  DTOs.
-- **Repositories** (`src/Repository/`): Extend `ServiceEntityRepository`, include custom pagination using Doctrine's
-  `Paginator`.
-- **Controllers** (`src/Controller/`): Thin layer using `BaseController` for serialization. Routes defined via PHP 8
-  `#[Route]` attributes.
-
-**BaseController helpers:**
-
-- `getRequest(mixed $data, string $requestClass)` - deserialize to Request DTO
-- `getResponse($response)` - serialize Response DTO to JSON
+- **Request DTOs** (`src/Request/`): Validate incoming data using Symfony Validator constraints. Include static `fromArray()` for data hydration.
+- **Services** (`src/Service/`): Contain business logic. Throw `UnprocessableEntityHttpException` for business rule violations (e.g., duplicate email).
+- **Repositories** (`src/Repository/`): Extend `ServiceEntityRepository`, include custom queries (e.g., `findByEmailExcludingId()`).
+- **Controllers** (`src/Controller/`): Thin layer. Methods receive validated Request DTOs directly via constructor injection.
 
 ### Frontend Structure
 
 - **Vite + Vue 3** with file-based routing via `unplugin-vue-router`
 - **Vuetify 3** component library with auto-import
-- **Axios client** configured at `src/services/axios.js` (base URL: `http://clean-api.localhost`)
-- Routes defined manually in `src/router/index.js` (two routes: `/` for Hello, `/users` for UsersList)
+- **Axios client** configured at `frontend/src/services/axios.js` (base URL: `http://clean-api.localhost`)
+- Routes defined in `frontend/src/router/index.js` (two routes: `/` for Hello, `/users` for UsersList)
 
 ### Docker Services
 
@@ -101,24 +112,27 @@ Response DTO (serialized to JSON)
 
 ## API Endpoints (User resource)
 
-| Method    | Endpoint                                                        | Description                       |
-|-----------|-----------------------------------------------------------------|-----------------------------------|
-| POST      | `/user`                                                         | Create user                       |
-| GET       | `/user/{value}/{fieldName}`                                     | Get user by field (default: `id`) |
-| PUT/PATCH | `/user/{id}`                                                    | Update user                       |
-| DELETE    | `/user/{id}`                                                    | Delete user                       |
-| GET       | `/user?perPage=10&sortBy=firstName&order=desc&firstName=Search` | List/search with pagination       |
+| Method    | Endpoint                       | Description                   |
+|-----------|--------------------------------|-------------------------------|
+| POST      | `/user`                        | Create user                   |
+| GET       | `/user/{id}`                   | Get user by ID                |
+| GET       | `/user/by/{fieldName}/{value}` | Get user by field (default: id) |
+| PATCH/PUT | `/user/{id}`                   | Update user                   |
+| DELETE    | `/user/{id}`                   | Delete user                   |
+| GET       | `/user`                        | List/search with pagination   |
 
 ## Adding New Resources
 
 When adding a new entity (e.g., Product):
 
-1. **Entity**: Create in `src/Entity/Product.php` with Doctrine attributes, `setData()` method
+1. **Entity**: Create in `src/Entity/Product.php` with Doctrine attributes, getters/setters
 2. **Repository**: Create in `src/Repository/ProductRepository.php`, extend `ServiceEntityRepository`
-3. **Request DTOs**: Create in `src/Request/` (AddProductRequest, etc.) with validation attributes
-4. **Response DTOs**: Create in `src/Response/` extending `BaseResponse`
-5. **Service**: Create in `src/Service/ProductService.php` with validation and business logic
-6. **Controller**: Create in `src/Controller/ProductsController.php` extending `BaseController`, add `#[Route]`
-   attributes
-7. **Migration**: Generate via `docker exec backend-clean-api php bin/console doctrine:migrations:generate`
-8. **Frontend**: Add axios methods in `src/services/axios.js`, create Vue components as needed
+3. **Request DTOs**: Create in `src/Request/` (AddProductRequest, UpdateProductRequest, etc.) with:
+   - Validation attributes (`#[Assert\NotBlank]`, etc.)
+   - Default values for typed properties
+   - `fromArray()` factory method
+   - Implement `RequestValidatedInterface`
+4. **Service**: Create in `src/Service/ProductService.php` with business logic
+5. **Controller**: Create in `src/Controller/ProductsController.php`, add `#[Route]` attributes, inject Service
+6. **Migration**: Generate via `docker exec backend-clean-api php bin/console doctrine:migrations:generate`
+7. **Frontend**: Add axios methods in `src/services/axios.js`, create Vue components as needed
