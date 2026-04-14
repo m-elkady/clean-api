@@ -13,7 +13,7 @@ class UserFixture extends Fixture
             $user = new User();
             $user->setFirstName('user First name' . $i);
             $user->setLastName('user Last name' . $i);
-            $user->setUserEmail('user' . $i . '@example.com');
+            $user->setEmail('user' . $i . '@example.com');
 
             $manager->persist($user);
         }

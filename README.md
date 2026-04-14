@@ -22,16 +22,16 @@
         ```
         POST /user Contet-Type=application/json
         {
-            "first_name": "User First name",
-            "last_name": "User Last name",
-            "user_email": "email@test.com"
+            "firstName": "User First name",
+            "lastName": "User Last name",
+            "email": "email@test.com"
         }
         ```
     
     - ##### Get user
 
         - to read a user data from our database
-        - the default value for fieldName is `id` so you can consume the endpoint as fowllows: `/user/{id}` or `/user/{User Last name}/last_name`
+        - the default value for fieldName is `id` so you can consume the endpoint as fowllows: `/user/{id}` or `/user/by/{User Last name}/last_name`
         ```
         GET /user/{value}/{fieldName}
         ```
@@ -42,9 +42,9 @@
         ```
         PUT /user/{id} Contet-Type=application/json
         {
-            "first_name": "new User First name",
-            "last_name": "new User Last name",
-            "user_email": "email_new@test.com"
+            "firstName": "new User First name",
+            "lastName": "new User Last name",
+            "email": "email_new@test.com"
         }
         ```
     
@@ -61,7 +61,7 @@
             ```
             GET /user/?perPage=10&sortBy=firstName&order=desc
             ```
-        - to search by criteria (firstName, lastName, userEmail)
+        - to search by criteria (firstName, lastName, email)
             ```
             GET /user/?perPage=10&sortBy=firstName&order=desc&firstName=First name
             ```
