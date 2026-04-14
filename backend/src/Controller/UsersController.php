@@ -8,7 +8,10 @@ use App\Request\UpdateUserRequest;
 use App\Service\UserService;
 use App\Response\AppResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
 class UsersController extends BaseController
 {
@@ -20,17 +23,27 @@ class UsersController extends BaseController
     #[Route(path: '/user', name: 'addUser', methods: 'POST')]
     public function add(AddUserRequest $request): JsonResponse
     {
-        $userDto = $this->userService->create($request);
+        try {
+            $userDto = $this->userService->create($request);
 
-        return AppResponse::created($userDto);
+            return AppResponse::created($userDto);
+        } catch (UnprocessableEntityHttpException $e) {
+            return AppResponse::error($e->getMessage(), Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
     }
 
     #[Route(path: '/user/{id}', name: 'updateUser', methods: ['PATCH', 'PUT'])]
     public function update(int $id, UpdateUserRequest $request): JsonResponse
     {
-        $userDto = $this->userService->update($id, $request);
+        try {
+            $userDto = $this->userService->update($id, $request);
 
-        return AppResponse::success($userDto);
+            return AppResponse::success($userDto);
+        } catch (UnprocessableEntityHttpException $e) {
+            return AppResponse::error($e->getMessage(), Response::HTTP_UNPROCESSABLE_ENTITY);
+        } catch (NotFoundHttpException $e) {
+            return AppResponse::notFound($e->getMessage());
+        }
     }
 
     #[Route('/user/{id}', methods: ['GET'])]
@@ -48,13 +61,14 @@ class UsersController extends BaseController
     #[Route('/user/by/{fieldName}/{value}', defaults: ['fieldName' => 'id'], methods: ['GET'])]
     public function getByField(string $value, string $fieldName = 'id'): JsonResponse
     {
-        $userDto = $this->userService->findOneBy($value, $fieldName);
-
-        if (!$userDto) {
+        try{
+            $userDto = $this->userService->findOneBy($value, $fieldName);
+            
+            return AppResponse::success($userDto);
+        } catch (NotFoundHttpException $e) {
             return AppResponse::notFound('User not found');
         }
 
-        return AppResponse::success($userDto);
     }
 
     #[Route('/user/{id}', methods: ['DELETE'], name: 'removeUser')]
