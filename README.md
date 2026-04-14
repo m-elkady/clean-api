@@ -51,31 +51,6 @@ A full-stack application demonstrating clean architecture patterns with Symfony 
    - Load test fixtures
    - Start the frontend dev server
 
-## Manual Setup (Alternative)
-
-### Backend
-
-```bash
-# Start containers
-make start
-
-# Install dependencies
-docker exec backend-clean-api composer install
-
-# Run migrations
-docker exec backend-clean-api php bin/console doctrine:migrations:migrate
-
-# Load fixtures
-docker exec backend-clean-api php bin/console doctrine:fixtures:load
-```
-
-### Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
 
 ## API Endpoints
 
