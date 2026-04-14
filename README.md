@@ -1,6 +1,7 @@
 # Clean API
 
-A full-stack application demonstrating clean architecture patterns with Symfony 7.4/PHP 8.4 backend and Vue 3/Vuetify frontend.
+A full-stack application demonstrating clean architecture patterns with Symfony 7.4/PHP 8.4 backend and Vue 3/Vuetify
+frontend.
 
 ## Features
 
@@ -13,13 +14,13 @@ A full-stack application demonstrating clean architecture patterns with Symfony 
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|------------|
-| Backend | Symfony 7.4, PHP 8.4, Doctrine ORM |
-| Database | MySQL 5.7 |
-| Frontend | Vue 3, Vuetify 3, Vite |
-| Web Server | Nginx |
-| Containerization | Docker & Docker Compose |
+| Layer            | Technology                         |
+|------------------|------------------------------------|
+| Backend          | Symfony 7.4, PHP 8.4, Doctrine ORM |
+| Database         | MySQL 5.7                          |
+| Frontend         | Vue 3, Vuetify 3, Vite             |
+| Web Server       | Nginx                              |
+| Containerization | Docker & Docker Compose            |
 
 ## Prerequisites
 
@@ -45,23 +46,22 @@ A full-stack application demonstrating clean architecture patterns with Symfony 
    make init
    ```
    This command will:
-   - Build and start Docker containers
-   - Install backend dependencies
-   - Run database migrations
-   - Load test fixtures
-   - Start the frontend dev server
-
+    - Build and start Docker containers
+    - Install backend dependencies
+    - Run database migrations
+    - Load test fixtures
+    - Start the frontend dev server
 
 ## API Endpoints
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/user` | Create user |
-| GET | `/user/{id}` | Get user by ID |
-| GET | `/user/by/{fieldName}/{value}` | Get user by any field |
-| PATCH/PUT | `/user/{id}` | Update user |
-| DELETE | `/user/{id}` | Delete user |
-| GET | `/user` | List/search with pagination |
+| Method    | Endpoint                       | Description                 |
+|-----------|--------------------------------|-----------------------------|
+| POST      | `/user`                        | Create user                 |
+| GET       | `/user/{id}`                   | Get user by ID              |
+| GET       | `/user/by/{fieldName}/{value}` | Get user by any field       |
+| PATCH/PUT | `/user/{id}`                   | Update user                 |
+| DELETE    | `/user/{id}`                   | Delete user                 |
+| GET       | `/user`                        | List/search with pagination |
 
 ### Create User Example
 
@@ -114,10 +114,10 @@ npm run lint
 
 ## Access
 
-| Service | URL |
-|---------|-----|
+| Service     | URL                        |
+|-------------|----------------------------|
 | Backend API | http://clean-api.localhost |
-| Frontend | http://localhost:3000 |
+| Frontend    | http://localhost:3000      |
 
 ## License
 
