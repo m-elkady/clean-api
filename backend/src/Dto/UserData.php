@@ -8,7 +8,7 @@ class UserData
         public int $id,
         public string $firstName,
         public string $lastName,
-        public string $userEmail,
+        public string $email,
         public string $createdAt
     ) {
     }
@@ -19,7 +19,7 @@ class UserData
             $data['id'],
             $data['firstName'],
             $data['lastName'],
-            $data['userEmail'],
+            $data['email'],
             $data['createdAt'] ?? ''
         );
     }
@@ -30,7 +30,7 @@ class UserData
             $entity->getId(),
             $entity->getFirstName(),
             $entity->getLastName(),
-            $entity->getUserEmail(),
+            $entity->getEmail(),
             $entity->getCreatedAt()
         );
     }
