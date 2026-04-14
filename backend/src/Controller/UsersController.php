@@ -5,19 +5,20 @@ namespace App\Controller;
 use App\Request\AddUserRequest;
 use App\Request\PaginateUserRequest;
 use App\Request\UpdateUserRequest;
-use App\Service\UserService;
 use App\Response\AppResponse;
+use App\Service\UserService;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
+use Symfony\Component\Routing\Attribute\Route;
 
 class UsersController extends BaseController
 {
     public function __construct(
         private readonly UserService $userService
-    ) {
+    )
+    {
     }
 
     #[Route(path: '/user', name: 'addUser', methods: 'POST')]
@@ -61,9 +62,9 @@ class UsersController extends BaseController
     #[Route('/user/by/{fieldName}/{value}', defaults: ['fieldName' => 'id'], methods: ['GET'])]
     public function getByField(string $value, string $fieldName = 'id'): JsonResponse
     {
-        try{
+        try {
             $userDto = $this->userService->findOneBy($value, $fieldName);
-            
+
             return AppResponse::success($userDto);
         } catch (NotFoundHttpException $e) {
             return AppResponse::notFound('User not found');

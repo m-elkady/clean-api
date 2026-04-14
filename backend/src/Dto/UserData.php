@@ -5,12 +5,13 @@ namespace App\Dto;
 class UserData
 {
     public function __construct(
-        public int $id,
+        public int    $id,
         public string $firstName,
         public string $lastName,
         public string $email,
         public string $createdAt
-    ) {
+    )
+    {
     }
 
     public static function fromArray(array $data): self

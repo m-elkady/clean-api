@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
+use DateTimeImmutable;
+use DateTimeInterface;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -26,7 +28,7 @@ class User
     public string $email;
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
-    private \DateTimeInterface $createdAt;
+    private DateTimeInterface $createdAt;
 
     public function getId(): ?int
     {
@@ -66,7 +68,7 @@ class User
     #[ORM\PrePersist]
     public function setCreatedAt(): void
     {
-        $this->createdAt = new \DateTimeImmutable();
+        $this->createdAt = new DateTimeImmutable();
     }
 
     public function getCreatedAt(): string

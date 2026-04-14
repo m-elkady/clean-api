@@ -12,8 +12,9 @@ class ValidationException extends HttpException
 {
     public function __construct(
         private readonly ConstraintViolationList $violations,
-        int $code = Response::HTTP_UNPROCESSABLE_ENTITY
-    ) {
+        int                                      $code = Response::HTTP_UNPROCESSABLE_ENTITY
+    )
+    {
         parent::__construct($code, 'Validation failed');
     }
 
@@ -33,6 +34,6 @@ class ValidationException extends HttpException
 
     public function getResponse(): JsonResponse
     {
-       return AppResponse::validationError($this->getErrorsArray());
+        return AppResponse::validationError($this->getErrorsArray());
     }
 }

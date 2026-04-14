@@ -4,10 +4,10 @@ namespace App\Service;
 
 use App\Dto\UserData;
 use App\Entity\User;
+use App\Repository\UserRepository;
 use App\Request\AddUserRequest;
 use App\Request\PaginateUserRequest;
 use App\Request\UpdateUserRequest;
-use App\Repository\UserRepository;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
@@ -16,14 +16,15 @@ class UserService
 {
     public function __construct(
         private readonly UserRepository $userRepository
-    ) {
+    )
+    {
     }
 
     public function create(AddUserRequest $request): UserData
     {
         // Check if email already exists
         $existingUser = $this->userRepository->findOneBy(['email' => $request->email]);
-        
+
         if ($existingUser !== null) {
             throw new UnprocessableEntityHttpException('Email already exists');
         }

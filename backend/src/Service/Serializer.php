@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use ArrayObject;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactory;
 use Symfony\Component\Serializer\Mapping\Loader\AttributeLoader;
@@ -33,7 +34,7 @@ class Serializer implements SerializerInterface
         return $this->serializer->serialize($data, $format);
     }
 
-    public function normalize(mixed $data, string $format = 'json', array $context = []): float|int|\ArrayObject|bool|array|string|null
+    public function normalize(mixed $data, string $format = 'json', array $context = []): float|int|ArrayObject|bool|array|string|null
     {
         return $this->serializer->normalize($data, $format, $context);
     }
