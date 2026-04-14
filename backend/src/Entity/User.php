@@ -90,11 +90,4 @@ class User
     {
         return $this->createdAt->format('Y-m-d H:i:s');
     }
-
-    public function setData(array $data): void
-    {
-        foreach ($data as $field => $value) {
-            $this->{'set'.ucfirst($field)}($value);
-        }
-    }
 }

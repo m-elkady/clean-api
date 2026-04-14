@@ -3,58 +3,73 @@
 namespace App\Controller;
 
 use App\Request\AddUserRequest;
-use App\Request\GetUserRequest;
 use App\Request\PaginateUserRequest;
 use App\Request\UpdateUserRequest;
 use App\Service\UserService;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
+use App\Response\AppResponse;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 
 class UsersController extends BaseController
 {
-    public function __construct(private readonly UserService $userService)
-    {
+    public function __construct(
+        private readonly UserService $userService
+    ) {
     }
 
     #[Route(path: '/user', name: 'addUser', methods: 'POST')]
-    public function add(Request $request): Response
+    public function add(AddUserRequest $request): JsonResponse
     {
-        $addUserRequest = AddUserRequest::fromJson($request->getContent(), $this->serializer);
-        $response = $this->userService->add($addUserRequest);
-        return $this->getResponse($response);
+        $userDto = $this->userService->create($request);
+
+        return AppResponse::created($userDto);
     }
 
     #[Route(path: '/user/{id}', name: 'updateUser', methods: ['PATCH', 'PUT'])]
-    public function update(int $id, Request $request): Response
+    public function update(int $id, UpdateUserRequest $request): JsonResponse
     {
-        $updateUserRequest = UpdateUserRequest::fromJson($request->getContent(), $this->serializer);;
-        $response = $this->userService->update($id, $updateUserRequest);
-        return $this->getResponse($response);
+        $userDto = $this->userService->update($id, $request);
+
+        return AppResponse::success($userDto);
     }
 
-    #[Route('/user/{value}/{fieldName}', defaults: ['fieldName' => 'id'], methods: ['GET'])]
-    public function read(string $value, string $fieldName = 'id'): Response
+    #[Route('/user/{id}', methods: ['GET'])]
+    public function getById(int $id): JsonResponse
     {
-        $getUserRequest = GetUserRequest::fromJson(json_encode([$fieldName => $value]), $this->serializer);
-        $response = $this->userService->get($getUserRequest);
+        $userDto = $this->userService->findOneBy((string)$id, 'id');
 
-        return $this->getResponse($response);
+        if (!$userDto) {
+            return AppResponse::notFound('User not found');
+        }
+
+        return AppResponse::success($userDto);
+    }
+
+    #[Route('/user/by/{fieldName}/{value}', defaults: ['fieldName' => 'id'], methods: ['GET'])]
+    public function getByField(string $value, string $fieldName = 'id'): JsonResponse
+    {
+        $userDto = $this->userService->findOneBy($value, $fieldName);
+
+        if (!$userDto) {
+            return AppResponse::notFound('User not found');
+        }
+
+        return AppResponse::success($userDto);
     }
 
     #[Route('/user/{id}', methods: ['DELETE'], name: 'removeUser')]
-    public function delete(int $id): Response
+    public function delete(int $id): JsonResponse
     {
-        $response = $this->userService->delete($id);
-        return $this->getResponse($response);
+        $this->userService->delete($id);
+
+        return AppResponse::noContent();
     }
 
     #[Route(path: '/user', name: 'paginateUsers', methods: 'GET')]
-    public function paginate(Request $request): Response
+    public function paginate(PaginateUserRequest $request): JsonResponse
     {
-        $paginateRequest = PaginateUserRequest::fromRequest($request, $this->serializer);
-        $response = $this->userService->paginate($paginateRequest);
+        $result = $this->userService->paginate($request);
 
-        return $this->getResponse($response);
+        return AppResponse::success($result);
     }
 }
