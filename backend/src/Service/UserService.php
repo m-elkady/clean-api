@@ -9,6 +9,8 @@ use App\Request\PaginateUserRequest;
 use App\Request\UpdateUserRequest;
 use App\Repository\UserRepository;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
+
 
 class UserService
 {
@@ -19,10 +21,17 @@ class UserService
 
     public function create(AddUserRequest $request): UserData
     {
+        // Check if email already exists
+        $existingUser = $this->userRepository->findOneBy(['email' => $request->email]);
+        
+        if ($existingUser !== null) {
+            throw new UnprocessableEntityHttpException('Email already exists');
+        }
+
         $user = new User();
         $user->setFirstName($request->firstName);
         $user->setLastName($request->lastName);
-        $user->setUserEmail($request->userEmail);
+        $user->setEmail($request->email);
 
         $this->userRepository->add($user);
 
@@ -37,9 +46,20 @@ class UserService
             throw new NotFoundHttpException('User not found');
         }
 
+        // Check if email already exists (excluding current user)
+        if ($request->email !== null) {
+            $existingUser = $this->userRepository->findByEmailExcludingId($request->email, $id);
+
+            if ($existingUser) {
+                throw new UnprocessableEntityHttpException('Email already exists');
+            }
+        }
+
         $user->setFirstName($request->firstName);
         $user->setLastName($request->lastName);
-        $user->setUserEmail($request->userEmail ?? $user->getUserEmail());
+        if ($request->email !== null) {
+            $user->setEmail($request->email);
+        }
 
         $this->userRepository->getEntityManager()->flush();
 
@@ -62,7 +82,7 @@ class UserService
         $user = $this->userRepository->findOneBy([$field => $value]);
 
         if (!$user) {
-            return null;
+            throw new NotFoundHttpException('User not found');
         }
 
         return UserData::fromEntity($user);
@@ -81,7 +101,7 @@ class UserService
         );
 
         $users = [];
-        
+
         foreach ($paginator as $user) {
             $users[] = UserData::fromEntity($user);
         }
