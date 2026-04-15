@@ -4,6 +4,7 @@ import api from '@/services/axios';
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     token: localStorage.getItem('auth_token') || null,
+    refreshToken: localStorage.getItem('refresh_token') || null,
     user: JSON.parse(localStorage.getItem('user') || 'null'),
   }),
 
@@ -15,11 +16,13 @@ export const useAuthStore = defineStore('auth', {
     async login(email, password) {
       try {
         const response = await api.login(email, password);
-        const data = response.data;
+        const data = response.data.data;
 
-        if (data.success && data.data) {
-          this.token = data.data.token;
-          localStorage.setItem('auth_token', data.data.token);
+        if (data.access_token) {
+          this.token = data.access_token;
+          this.refreshToken = data.refresh_token;
+          localStorage.setItem('auth_token', data.access_token);
+          localStorage.setItem('refresh_token', data.refresh_token);
 
           // Fetch user info after login
           await this.fetchUser();
@@ -39,8 +42,10 @@ export const useAuthStore = defineStore('auth', {
         console.error('Logout error:', error);
       } finally {
         this.token = null;
+        this.refreshToken = null;
         this.user = null;
         localStorage.removeItem('auth_token');
+        localStorage.removeItem('refresh_token');
         localStorage.removeItem('user');
       }
     },

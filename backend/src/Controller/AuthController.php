@@ -9,6 +9,7 @@ use App\Service\JwtTokenService;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
+use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -19,7 +20,8 @@ use Symfony\Component\Routing\Attribute\Route;
 class AuthController
 {
     public function __construct(
-        private readonly JwtTokenService $jwtTokenService
+        private readonly JwtTokenService $jwtTokenService,
+        private readonly AuthService $authService
     ) {
     }
 
@@ -29,15 +31,34 @@ class AuthController
         // This is handled by Symfony's json_login authenticator
         // This method is called after successful authentication
         if (!$user) {
-            return AppResponse::error('Authentication failed', 401);
+            throw new UnauthorizedHttpException('Auth', 'Authentication failed');
         }
 
+        // Create access and refresh tokens and save to database
         $tokenData = $this->jwtTokenService->createTokenForUser($user);
 
         return AppResponse::success($tokenData);
     }
 
+    #[Route(path: '/refresh', name: 'refresh', methods: ['POST'])]
+    public function refresh(Request $request): JsonResponse
+    {
+        $refreshToken = json_decode($request->getContent(), true)['refresh_token'] ?? null;
+
+        if (!$refreshToken) {
+            return AppResponse::error('refresh_token is required', 400);
+        }
+
+        try {
+            $tokenData = $this->jwtTokenService->refreshToken($refreshToken);
+            return AppResponse::success($tokenData);
+        } catch (\Exception $e) {
+            return AppResponse::error($e->getMessage(), 401);
+        }
+    }
+
     #[Route(path: '/me', name: 'me', methods: ['GET'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
     public function me(#[CurrentUser] UserInterface $user): JsonResponse
     {
         return AppResponse::success([
@@ -53,8 +74,9 @@ class AuthController
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
     public function logout(#[CurrentUser] UserInterface $user): JsonResponse
     {
-        // For JWT, logout is handled client-side by removing the token
-        // This endpoint is mainly for consistency and any server-side cleanup
+        // Revoke all tokens for this user
+        $this->authService->logout($user);
+
         return AppResponse::success(['message' => 'Logged out successfully']);
     }
 }

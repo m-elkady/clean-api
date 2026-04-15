@@ -21,12 +21,19 @@ class UpdateUserRequest extends BaseRequest implements RequestValidatedInterface
     )]
     public ?string $email = null;
 
+    #[Assert\Length(
+        min: 6,
+        minMessage: 'Password must be at least {{ limit }} characters long.',
+    )]
+    public ?string $password = null;
+
     public static function fromArray(array $data): self
     {
         $request = new self();
         $request->email = $data['email'] ?? null;
         $request->firstName = $data['firstName'] ?? '';
         $request->lastName = $data['lastName'] ?? '';
+        $request->password = $data['password'] ?? null;
 
         return $request;
     }

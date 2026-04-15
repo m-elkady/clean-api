@@ -10,12 +10,14 @@ use App\Request\PaginateUserRequest;
 use App\Request\UpdateUserRequest;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 
 class UserService
 {
     public function __construct(
-        private readonly UserRepository $userRepository
+        private readonly UserRepository $userRepository,
+        private readonly UserPasswordHasherInterface $passwordHasher
     )
     {
     }
@@ -33,6 +35,10 @@ class UserService
         $user->setFirstName($request->firstName);
         $user->setLastName($request->lastName);
         $user->setEmail($request->email);
+
+        // Hash and set the password
+        $hashedPassword = $this->passwordHasher->hashPassword($user, $request->password);
+        $user->setPassword($hashedPassword);
 
         $this->userRepository->add($user);
 
@@ -60,6 +66,12 @@ class UserService
         $user->setLastName($request->lastName);
         if ($request->email !== null) {
             $user->setEmail($request->email);
+        }
+
+        // Hash and update password if provided
+        if ($request->password !== null && $request->password !== '') {
+            $hashedPassword = $this->passwordHasher->hashPassword($user, $request->password);
+            $user->setPassword($hashedPassword);
         }
 
         $this->userRepository->getEntityManager()->flush();

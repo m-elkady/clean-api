@@ -30,3 +30,7 @@ services:
   App\EventListener\ExceptionListener:
     tags:
       - { name: kernel.event_listener, event: kernel.exception, priority: 10 }
+
+  app.security.authentication_success_handler:
+    class: App\Security\AuthenticationSuccessHandler
+    autowire: true

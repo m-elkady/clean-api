@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\ApiTokenRepository;
 use DateTime;
+use DateTimeImmutable;
 use DateTimeInterface;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -13,6 +14,7 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\HasLifecycleCallbacks]
 #[ORM\Index(fields: ['tokenId'])]
 #[ORM\Index(fields: ['user'])]
+#[ORM\Index(fields: ['refreshTokenId'])]
 class ApiToken
 {
     #[ORM\Id]
@@ -26,6 +28,9 @@ class ApiToken
 
     #[ORM\Column(type: Types::STRING, length: 255, unique: true)]
     private string $tokenId;
+
+    #[ORM\Column(type: Types::STRING, length: 255, unique: true, nullable: true)]
+    private ?string $refreshTokenId = null;
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     private DateTimeInterface $expiresAt;
@@ -48,7 +53,7 @@ class ApiToken
     }
 
     #[ORM\PrePersist]
-    public function setCreatedAt(): void
+    public function onPrePersist(): void
     {
         if (!isset($this->createdAt)) {
             $this->createdAt = new DateTimeImmutable();
@@ -65,14 +70,43 @@ class ApiToken
         return $this->user;
     }
 
+    public function setUser(User $user): self
+    {
+        $this->user = $user;
+        return $this;
+    }
+
     public function getTokenId(): string
     {
         return $this->tokenId;
     }
 
+    public function setTokenId(string $tokenId): self
+    {
+        $this->tokenId = $tokenId;
+        return $this;
+    }
+
+    public function getRefreshTokenId(): ?string
+    {
+        return $this->refreshTokenId;
+    }
+
+    public function setRefreshTokenId(?string $refreshTokenId): self
+    {
+        $this->refreshTokenId = $refreshTokenId;
+        return $this;
+    }
+
     public function getExpiresAt(): DateTimeInterface
     {
         return $this->expiresAt;
+    }
+
+    public function setExpiresAt(DateTimeInterface $expiresAt): self
+    {
+        $this->expiresAt = $expiresAt;
+        return $this;
     }
 
     public function getCreatedAt(): DateTimeInterface
