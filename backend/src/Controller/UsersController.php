@@ -8,9 +8,7 @@ use App\Request\UpdateUserRequest;
 use App\Response\AppResponse;
 use App\Service\UserService;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 
 class UsersController extends BaseController
@@ -24,37 +22,23 @@ class UsersController extends BaseController
     #[Route(path: '/user', name: 'addUser', methods: 'POST')]
     public function add(AddUserRequest $request): JsonResponse
     {
-        try {
-            $userDto = $this->userService->create($request);
+        $userDto = $this->userService->create($request);
 
-            return AppResponse::created($userDto);
-        } catch (UnprocessableEntityHttpException $e) {
-            return AppResponse::error($e->getMessage(), Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
+        return AppResponse::created($userDto);
     }
 
     #[Route(path: '/user/{id}', name: 'updateUser', methods: ['PATCH', 'PUT'])]
     public function update(int $id, UpdateUserRequest $request): JsonResponse
     {
-        try {
-            $userDto = $this->userService->update($id, $request);
+        $userDto = $this->userService->update($id, $request);
 
-            return AppResponse::success($userDto);
-        } catch (UnprocessableEntityHttpException $e) {
-            return AppResponse::error($e->getMessage(), Response::HTTP_UNPROCESSABLE_ENTITY);
-        } catch (NotFoundHttpException $e) {
-            return AppResponse::notFound($e->getMessage());
-        }
+        return AppResponse::success($userDto);
     }
 
     #[Route('/user/{id}', methods: ['GET'])]
     public function getById(int $id): JsonResponse
     {
-        $userDto = $this->userService->findOneBy((string)$id, 'id');
-
-        if (!$userDto) {
-            return AppResponse::notFound('User not found');
-        }
+        $userDto = $this->userService->findOneBy((string)$id);
 
         return AppResponse::success($userDto);
     }
@@ -62,17 +46,12 @@ class UsersController extends BaseController
     #[Route('/user/by/{fieldName}/{value}', defaults: ['fieldName' => 'id'], methods: ['GET'])]
     public function getByField(string $value, string $fieldName = 'id'): JsonResponse
     {
-        try {
             $userDto = $this->userService->findOneBy($value, $fieldName);
 
             return AppResponse::success($userDto);
-        } catch (NotFoundHttpException $e) {
-            return AppResponse::notFound('User not found');
-        }
-
     }
 
-    #[Route('/user/{id}', methods: ['DELETE'], name: 'removeUser')]
+    #[Route('/user/{id}', name: 'removeUser', methods: ['DELETE'])]
     public function delete(int $id): JsonResponse
     {
         $this->userService->delete($id);
