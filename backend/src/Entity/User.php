@@ -40,15 +40,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: Types::JSON)]
     private array $roles = [];
 
-    #[ORM\OneToMany(mappedBy: 'user', targetEntity: ApiToken::class, cascade: ['persist', 'remove'])]
-    private Collection $apiTokens;
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: RefreshToken::class, cascade: ['persist', 'remove'])]
+    private Collection $refreshTokens;
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     private DateTimeInterface $createdAt;
 
     public function __construct()
     {
-        $this->apiTokens = new ArrayCollection();
+        $this->refreshTokens = new ArrayCollection();
         $this->roles = [self::ROLE_USER];
     }
 
@@ -129,24 +129,23 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
     /**
-     * @return Collection<int, ApiToken>
+     * @return Collection<int, RefreshToken>
      */
-    public function getApiTokens(): Collection
+    public function getRefreshTokens(): Collection
     {
-        return $this->apiTokens;
+        return $this->refreshTokens;
     }
 
-    public function addApiToken(ApiToken $apiToken): void
+    public function addRefreshToken(RefreshToken $refreshToken): void
     {
-        if (!$this->apiTokens->contains($apiToken)) {
-            $this->apiTokens->add($apiToken);
-            $apiToken->setUser($this);
+        if (!$this->refreshTokens->contains($refreshToken)) {
+            $this->refreshTokens->add($refreshToken);
         }
     }
 
-    public function removeApiToken(ApiToken $apiToken): void
+    public function removeRefreshToken(RefreshToken $refreshToken): void
     {
-        $this->apiTokens->removeElement($apiToken);
+        $this->refreshTokens->removeElement($refreshToken);
     }
 
     #[ORM\PrePersist]

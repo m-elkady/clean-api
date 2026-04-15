@@ -4,7 +4,7 @@ namespace App\Request;
 
 use Symfony\Component\Validator\Constraints as Assert;
 
-class AddUserRequest  extends BaseRequest implements RequestValidatedInterface
+class AddUserRequest  extends BaseRequest
 {
     #[Assert\NotBlank]
     #[Assert\NotNull]
@@ -26,15 +26,4 @@ class AddUserRequest  extends BaseRequest implements RequestValidatedInterface
         minMessage: 'Password must be at least {{ limit }} characters long.',
     )]
     public string $password = '';
-
-    public static function fromArray(array $data): self
-    {
-        $request = new self();
-        $request->firstName = $data['firstName'] ?? '';
-        $request->lastName = $data['lastName'] ?? '';
-        $request->email = $data['email'] ?? '';
-        $request->password = $data['password'] ?? '';
-
-        return $request;
-    }
 }

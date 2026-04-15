@@ -64,15 +64,7 @@ class UserService
 
         $user->setFirstName($request->firstName);
         $user->setLastName($request->lastName);
-        if ($request->email !== null) {
-            $user->setEmail($request->email);
-        }
-
-        // Hash and update password if provided
-        if ($request->password !== null && $request->password !== '') {
-            $hashedPassword = $this->passwordHasher->hashPassword($user, $request->password);
-            $user->setPassword($hashedPassword);
-        }
+        $user->setEmail($request->email);
 
         $this->userRepository->getEntityManager()->flush();
 

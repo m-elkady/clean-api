@@ -2,8 +2,7 @@
 
 namespace App\Resolver;
 
-use App\Exception\ValidationException;
-use App\Request\RequestValidatedInterface;
+use App\Request\BaseRequest;
 use App\Service\Serializer;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Controller\ValueResolverInterface;
@@ -23,7 +22,7 @@ class RequestResolver implements ValueResolverInterface
     {
         $type = $argument->getType();
 
-        if (!$type || !is_a($type, RequestValidatedInterface::class, true)) {
+        if (!$type || !is_subclass_of($type, BaseRequest::class)) {
             return [];
         }
 

@@ -5,7 +5,7 @@ namespace App\Request;
 use App\Service\Constants;
 use Symfony\Component\Validator\Constraints as Assert;
 
-class PaginateUserRequest extends BaseRequest implements RequestValidatedInterface
+class PaginateUserRequest extends BaseRequest
 {
     public ?int $page = 1;
     public ?int $perPage = Constants::PAGE_LIMIT;
@@ -19,23 +19,7 @@ class PaginateUserRequest extends BaseRequest implements RequestValidatedInterfa
     public ?string $firstName;
     public ?string $lastName;
     public ?string $email;
-
     public $queryParams = ['firstName', 'lastName', 'email'];
-
-
-    public static function fromArray(array $data): self
-    {
-        $request = new self();
-        $request->page = $data['page'] ?? 1;
-        $request->perPage = $data['perPage'] ?? $request->perPage;
-        $request->sortBy = $data['sortBy'] ?? 'id';
-        $request->order = $data['order'] ?? 'asc';
-        $request->firstName = $data['firstName'] ?? null;
-        $request->lastName = $data['lastName'] ?? null;
-        $request->email = $data['email'] ?? null;
-
-        return $request;
-    }
 
     public function getQueryOptions(): array
     {

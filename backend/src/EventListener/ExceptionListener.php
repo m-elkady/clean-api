@@ -8,6 +8,7 @@ use Symfony\Component\HttpKernel\Event\ExceptionEvent;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
+use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
 class ExceptionListener
 {
@@ -29,7 +30,7 @@ class ExceptionListener
             return;
         }
 
-        if ($exception instanceof AccessDeniedHttpException) {
+        if ($exception instanceof UnauthorizedHttpException) {
             $event->setResponse(AppResponse::unauthorized($exception->getMessage() ?: 'Access denied'));
             $event->stopPropagation();
             return;
