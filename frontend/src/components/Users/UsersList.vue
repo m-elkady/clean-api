@@ -25,7 +25,7 @@
           <v-col cols="3">
             <v-row>
               <v-col>
-                <v-btn class="mr-2" color="primary" @click="search">Edit</v-btn>
+                <v-btn class="mr-2" color="primary" @click="search">Search</v-btn>
                 <v-btn color="grey" @click="clear">Clear</v-btn>
               </v-col>
             </v-row>
@@ -53,8 +53,8 @@
           </thead>
           <tbody>
           <tr v-for="user in users" :key="user.id">
-            <td>{{ user.first_name }}</td>
-            <td>{{ user.last_name }}</td>
+            <td>{{ user.firstName }}</td>
+            <td>{{ user.lastName }}</td>
             <td>{{ user.email }}</td>
             <td>
               <v-btn class="mr-2" color="warning" @click="goToEdit(user.id)">Edit</v-btn>
@@ -64,7 +64,7 @@
           </tr>
           </tbody>
         </v-table>
-        <v-pagination v-model="pagination.page" :length="pagination.lenght" :total-visible="5"></v-pagination>
+        <v-pagination v-model="pagination.page" :length="pagination.length" :total-visible="5"></v-pagination>
       </v-col>
     </v-row>
   </v-container>
@@ -79,6 +79,8 @@
                         :rules="[rules.required]"></v-text-field>
           <v-text-field type="email" v-model="dialog.data.email" label="Email"
                         :rules="[rules.required, rules.email]"></v-text-field>
+          <v-text-field  v-show="showPassword" type="password" v-model="dialog.data.password" label="Password"
+                        :rules="dialog.data.id === '' ? [rules.required] : []"></v-text-field>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -134,6 +136,7 @@ export default {
         visible: false,
         id: null
       },
+      showPassword: false,
       dialog: {
         visible: false,
         icon: 'mdi-plus',
@@ -143,6 +146,7 @@ export default {
           firstName: '',
           lastName: '',
           email: '',
+          password: '',
         }
       },
       mainAlert: alertProps,
@@ -150,17 +154,14 @@ export default {
       ...dialogRules,
       pagination: {
         page: 1,
-        lenght: 1
+        length: 1
       },
     };
   },
   watch: {
-    pagination: {
-      handler() {
-        this.queryParams = {...this.queryParams, ...{page: this.pagination.page}};
-        this.fetchUsers();
-      },
-      deep: true,
+    'pagination.page'() {
+      this.queryParams = {...this.queryParams, ...{page: this.pagination.page}};
+      this.fetchUsers();
     },
     queryParams: {
       handler() {
@@ -169,30 +170,32 @@ export default {
     }
   },
   async created() {
-    this.fetchUsers();
+    await this.fetchUsers();
   },
   methods: {
     async fetchUsers() {
       try {
         const response = (await api.getUsers(this.queryParams)).data;
-        this.users = response.users;
-        const paginationLength = Math.ceil(response.count / response.limit);
-        this.pagination.lenght = paginationLength;
+        this.users = response.data.users;
+        this.pagination.length = Math.ceil(response.data.count / response.data.limit) || 1;
       } catch (error) {
         console.error(error);
       }
     },
     goToCreate() {
-      const userData = {id: '', firstName: '', lastName: '', email: ''};
+      const userData = {id: '', firstName: '', lastName: '', email: '', password: ''};
       this.dialog = {...this.dialog, ...{title: 'Create New User', icon: 'mdi-plus', visible: true, data: userData}}
+      this.showPassword = true;
     },
     async goToEdit(id) {
+      this.showPassword = false;
       const response = (await api.getUser(id)).data;
       const userData = {
-        id: response.id,
-        firstName: response.first_name,
-        lastName: response.last_name,
-        email: response.email
+        id: response.data.id,
+        firstName: response.data.firstName,
+        lastName: response.data.lastName,
+        email: response.data.email,
+        password: ''
       };
       this.dialog = {...this.dialog, ...{title: 'Edit User', icon: 'mdi-pencil', visible: true, data: userData}}
     },
@@ -205,15 +208,15 @@ export default {
 
       if (id !== '') {
         api.updateUser(id, this.dialog.data)
-          .then(response => {
-            this.mainAlert = {visible: true, message: response.data.message, type: 'success'};
+          .then(() => {
+            this.mainAlert = {visible: true, message:  'User updated successfully', type: 'success'};
             this.dialog.visible = false;
             this.fetchUsers();
           });
       } else {
         api.createUser(this.dialog.data)
-          .then(response => {
-            this.mainAlert = {visible: true, message: response.data.message, type: 'success'};
+          .then(() => {
+            this.mainAlert = {visible: true, message:  'User created successfully', type: 'success'};
             this.dialog.visible = false;
             this.fetchUsers();
           });
@@ -225,8 +228,9 @@ export default {
     },
     async deleteUser(id) {
       try {
-        const {message, success} = (await api.deleteUser(id)).data;
-        this.mainAlert = {visible: true, message, type: success ? 'success' : 'danger'};
+        const response = (await api.deleteUser(id)).data;
+        const {success} = response.data || {};
+        this.mainAlert = {visible: true, message: 'User deleted successfully', type: success ? 'success' : 'danger'};
         this.fetchUsers();
         this.confirmDialog.visible = false;
       } catch (error) {
