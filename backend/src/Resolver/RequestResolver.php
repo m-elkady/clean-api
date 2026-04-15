@@ -4,6 +4,7 @@ namespace App\Resolver;
 
 use App\Exception\ValidationException;
 use App\Request\RequestValidatedInterface;
+use App\Service\Serializer;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Controller\ValueResolverInterface;
 use Symfony\Component\HttpKernel\ControllerMetadata\ArgumentMetadata;
@@ -12,7 +13,8 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 class RequestResolver implements ValueResolverInterface
 {
     public function __construct(
-        private readonly ValidatorInterface $validator
+        private readonly ValidatorInterface $validator,
+        private readonly Serializer $serializer
     )
     {
     }
@@ -26,19 +28,15 @@ class RequestResolver implements ValueResolverInterface
         }
 
         $data = match ($request->getMethod()) {
-            'GET', 'DELETE' => $request->query->all(),
-            default => json_decode($request->getContent(), true) ?? [],
-        };
+            'GET', 'DELETE' => json_encode($request->query->all()),
+            default => $request->getContent() ?? [],
+            };
+            
+        
+        $requestType = $this->serializer->deserialize($data, $type, 'json');
+        
+        $requestType->validate($this->validator);
 
-        $requestData = $type::fromArray($data);
-
-        // Validate the DTO
-        $violations = $this->validator->validate($requestData);
-
-        if (count($violations) > 0) {
-            throw new ValidationException($violations);
-        }
-
-        yield $requestData;
+        yield $requestType;
     }
 }
