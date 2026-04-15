@@ -2,68 +2,72 @@
 
 namespace App\Controller;
 
+use App\Entity\User;
 use App\Request\LoginRequest;
+use App\Request\RefreshRequest;
 use App\Response\AppResponse;
 use App\Service\AuthService;
-use App\Service\JwtTokenService;
+use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Attribute\AsController;
-use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
-use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use Symfony\Component\Routing\Attribute\Route;
 
-#[AsController]
 #[Route(path: '/auth', name: 'auth_')]
 class AuthController
 {
     public function __construct(
-        private readonly JwtTokenService $jwtTokenService,
-        private readonly AuthService $authService
-    ) {
+        private readonly AuthService              $authService,
+        private readonly JWTTokenManagerInterface $jwtManager
+    )
+    {
     }
 
     #[Route(path: '/login', name: 'login', methods: ['POST'])]
-    public function login(#[CurrentUser] ?UserInterface $user): JsonResponse
+    public function login(LoginRequest $request): JsonResponse
     {
-        // This is handled by Symfony's json_login authenticator
-        // This method is called after successful authentication
-        if (!$user) {
-            throw new UnauthorizedHttpException('Auth', 'Authentication failed');
-        }
+        // Manual authentication via AuthService
+        $result = $this->authService->login($request->email, $request->password);
 
-        // Create access and refresh tokens and save to database
-        $tokenData = $this->jwtTokenService->createTokenForUser($user);
+        $user = $result['user'];
+        $refreshToken = $result['refresh_token'];
 
-        return AppResponse::success($tokenData);
+        $accessToken = $this->jwtManager->create($user);
+
+        return AppResponse::success([
+            'access_token' => $accessToken,
+            'refresh_token' => $refreshToken,
+            'token_type' => 'Bearer',
+            'expires_in' => 3600,
+        ]);
     }
 
     #[Route(path: '/refresh', name: 'refresh', methods: ['POST'])]
-    public function refresh(Request $request): JsonResponse
+    public function refresh(RefreshRequest $request): JsonResponse
     {
-        $refreshToken = json_decode($request->getContent(), true)['refresh_token'] ?? null;
+        $result = $this->authService->refreshAccessToken($request->refresh_token);
+        $user = $result['user'];
+        $newRefreshToken = $result['refresh_token'];
 
-        if (!$refreshToken) {
-            return AppResponse::error('refresh_token is required', 400);
-        }
+        // Generate new access token
+        $accessToken = $this->jwtManager->create($user);
 
-        try {
-            $tokenData = $this->jwtTokenService->refreshToken($refreshToken);
-            return AppResponse::success($tokenData);
-        } catch (\Exception $e) {
-            return AppResponse::error($e->getMessage(), 401);
-        }
+        return AppResponse::success([
+            'access_token' => $accessToken,
+            'refresh_token' => $newRefreshToken,
+            'token_type' => 'Bearer',
+            'expires_in' => 3600,
+        ]);
+
     }
 
     #[Route(path: '/me', name: 'me', methods: ['GET'])]
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
-    public function me(#[CurrentUser] UserInterface $user): JsonResponse
+    public function me(#[CurrentUser] User $user): JsonResponse
     {
         return AppResponse::success([
             'id' => $user->getId(),
-            'email' => $user->getUserIdentifier(),
+            'email' => $user->getEmail(),
             'firstName' => $user->getFirstName(),
             'lastName' => $user->getLastName(),
             'roles' => $user->getRoles(),
@@ -72,9 +76,8 @@ class AuthController
 
     #[Route(path: '/logout', name: 'logout', methods: ['POST'])]
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
-    public function logout(#[CurrentUser] UserInterface $user): JsonResponse
+    public function logout(#[CurrentUser] User $user): JsonResponse
     {
-        // Revoke all tokens for this user
         $this->authService->logout($user);
 
         return AppResponse::success(['message' => 'Logged out successfully']);

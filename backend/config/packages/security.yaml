@@ -16,16 +16,6 @@ security:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
 
-        login:
-            pattern: ^/auth/login
-            stateless: true
-            json_login:
-                check_path: /auth/login
-                username_path: email
-                password_path: password
-                success_handler: app.security.authentication_success_handler
-                failure_handler: lexik_jwt_authentication.handler.authentication_failure
-
         api:
             pattern: ^/
             stateless: true
