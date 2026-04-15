@@ -4,7 +4,7 @@ namespace App\Request;
 
 use Symfony\Component\Validator\Constraints as Assert;
 
-class AddUserRequest implements RequestValidatedInterface
+class AddUserRequest  extends BaseRequest implements RequestValidatedInterface
 {
     #[Assert\NotBlank]
     #[Assert\NotNull]

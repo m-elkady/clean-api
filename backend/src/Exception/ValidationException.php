@@ -12,7 +12,7 @@ class ValidationException extends HttpException
 {
     public function __construct(
         private readonly ConstraintViolationList $violations,
-        int                                      $code = Response::HTTP_UNPROCESSABLE_ENTITY
+        int $code = Response::HTTP_UNPROCESSABLE_ENTITY
     )
     {
         parent::__construct($code, 'Validation failed');
