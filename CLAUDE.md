@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Clean API is a full-stack application with Symfony 7.4/PHP 8.4 backend and Vue 3/Vuetify frontend, demonstrating clean architecture patterns with clear separation of concerns.
+Clean API is a full-stack application with Symfony 7.4/PHP 8.3+ backend and Vue 3/Vuetify frontend, demonstrating clean architecture patterns with clear separation of concerns. Includes JWT authentication with refresh tokens.
 
 ## Development Commands
 
@@ -57,15 +57,21 @@ Response via AppResponse (JSON)
 **Custom RequestResolver Pattern:**
 
 This project uses a custom `RequestResolver` (`backend/src/Resolver/RequestResolver.php`) that automatically:
-1. Deserializes JSON/query params to Request DTOs
-2. Validates DTOs using Symfony Validator
+1. Deserializes JSON/query params to Request DTOs using Symfony Serializer
+2. Validates DTOs using Symfony Validator (calls `validate()` method)
 3. Throws `ValidationException` on validation failures
 
-Request DTOs must implement `RequestValidatedInterface`:
+Request DTOs must extend `BaseRequest`:
 ```php
-interface RequestValidatedInterface
+abstract class BaseRequest
 {
-    public static function fromArray(array $data): self;
+    public function validate(ValidatorInterface $validator): void
+    {
+        $errors = $validator->validate($this);
+        if (count($errors) > 0) {
+            throw new ValidationException($errors);
+        }
+    }
 }
 ```
 
@@ -76,28 +82,40 @@ The resolver is registered in `backend/config/services.yaml` with priority 256.
 Use `AppResponse` static methods for consistent JSON responses:
 - `AppResponse::success($data)` - 200 OK
 - `AppResponse::created($data)` - 201 Created
-- `AppResponse::paginated($items, $total, $page, $perPage)` - Paginated response
+- `AppResponse::noContent()` - 204 No Content
+- `AppResponse::validationError($errors)` - 422 Validation errors
 - `AppResponse::notFound($message)` - 404
+- `AppResponse::unauthorized($message)` - 401
 - `AppResponse::error($message, $status)` - Generic error
 
 **Key patterns:**
-- **Request DTOs** (`src/Request/`): Validate incoming data using Symfony Validator constraints. Include static `fromArray()` for data hydration.
+- **Request DTOs** (`src/Request/`): Extend `BaseRequest`, use typed properties with default values, add Symfony Validator attributes (`#[Assert\NotBlank]`, etc.)
 - **Services** (`src/Service/`): Contain business logic. Throw `UnprocessableEntityHttpException` for business rule violations (e.g., duplicate email).
 - **Repositories** (`src/Repository/`): Extend `ServiceEntityRepository`, include custom queries (e.g., `findByEmailExcludingId()`).
 - **Controllers** (`src/Controller/`): Thin layer. Methods receive validated Request DTOs directly via constructor injection.
 
+**Authentication:**
+
+Uses LexikJWTAuthenticationBundle with custom refresh token storage:
+- Access tokens (JWT) expire after 1 hour
+- Refresh tokens stored in `refresh_tokens` table
+- Auth endpoints in `AuthController`: `/auth/login`, `/auth/refresh`, `/auth/me`, `/auth/logout`
+- Protected routes require `#[IsGranted('IS_AUTHENTICATED_FULLY')]` attribute
+
 ### Frontend Structure
 
-- **Vite + Vue 3** with file-based routing via `unplugin-vue-router`
+- **Vite + Vue 3** with manual routing in `src/router/index.js`
 - **Vuetify 3** component library with auto-import
+- **Pinia** for state management (auth store at `src/stores/auth.js`)
 - **Axios client** configured at `frontend/src/services/axios.js` (base URL: `http://clean-api.localhost`)
-- Routes defined in `frontend/src/router/index.js` (two routes: `/` for Hello, `/users` for UsersList)
+- Routes: `/` (Hello), `/users` (UsersList), `/login` (Login) - all except `/login` require authentication
+- Navigation guard checks `auth.isAuthenticated` and redirects unauthenticated users to `/login`
 
 ### Docker Services
 
 | Container         | Purpose             | Access                                   |
 |-------------------|---------------------|------------------------------------------|
-| backend-clean-api | PHP 8.4-FPM         | `docker exec backend-clean-api ...`      |
+| backend-clean-api | PHP 8.3-FPM         | `docker exec backend-clean-api ...`      |
 | mysql-clean-api   | MySQL 5.7           | localhost:3306                           |
 | nginx-clean-api   | Nginx reverse proxy | http://clean-api.localhost (backend API) |
 | (frontend)        | Run locally for dev | http://localhost:3000                    |
@@ -110,16 +128,20 @@ Use `AppResponse` static methods for consistent JSON responses:
 - **Migrations** in `backend/migrations/` (versioned, apply via `doctrine:migrations:migrate`)
 - **Fixtures** in `backend/src/DataFixtures/` (load via `doctrine:fixtures:load`)
 
-## API Endpoints (User resource)
+## API Endpoints
 
-| Method    | Endpoint                       | Description                   |
-|-----------|--------------------------------|-------------------------------|
-| POST      | `/user`                        | Create user                   |
-| GET       | `/user/{id}`                   | Get user by ID                |
-| GET       | `/user/by/{fieldName}/{value}` | Get user by field (default: id) |
-| PATCH/PUT | `/user/{id}`                   | Update user                   |
-| DELETE    | `/user/{id}`                   | Delete user                   |
-| GET       | `/user`                        | List/search with pagination   |
+| Method    | Endpoint                       | Description                   | Auth Required |
+|-----------|--------------------------------|-------------------------------|---------------|
+| POST      | `/auth/login`                  | Login (email/password)        | No            |
+| POST      | `/auth/refresh`                | Refresh access token          | No            |
+| GET       | `/auth/me`                     | Get current user              | Yes           |
+| POST      | `/auth/logout`                 | Logout                        | Yes           |
+| POST      | `/user`                        | Create user                   | No            |
+| GET       | `/user/{id}`                   | Get user by ID                | Yes           |
+| GET       | `/user/by/{fieldName}/{value}` | Get user by field (default: id) | Yes      |
+| PATCH/PUT | `/user/{id}`                   | Update user                   | Yes           |
+| DELETE    | `/user/{id}`                   | Delete user                   | Yes           |
+| GET       | `/user`                        | List/search with pagination   | Yes           |
 
 ## Adding New Resources
 
@@ -128,10 +150,9 @@ When adding a new entity (e.g., Product):
 1. **Entity**: Create in `src/Entity/Product.php` with Doctrine attributes, getters/setters
 2. **Repository**: Create in `src/Repository/ProductRepository.php`, extend `ServiceEntityRepository`
 3. **Request DTOs**: Create in `src/Request/` (AddProductRequest, UpdateProductRequest, etc.) with:
+   - Extend `BaseRequest`
+   - Typed properties with default values
    - Validation attributes (`#[Assert\NotBlank]`, etc.)
-   - Default values for typed properties
-   - `fromArray()` factory method
-   - Implement `RequestValidatedInterface`
 4. **Service**: Create in `src/Service/ProductService.php` with business logic
 5. **Controller**: Create in `src/Controller/ProductsController.php`, add `#[Route]` attributes, inject Service
 6. **Migration**: Generate via `docker exec backend-clean-api php bin/console doctrine:migrations:generate`
