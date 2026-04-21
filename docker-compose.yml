@@ -1,27 +1,31 @@
 version: "3.8"
 services:
 
-  # PHP service
+  # FrankenPHP service
   backend:
-    build: ./docker/php
+    build:
+      context: ./docker/frankenphp
+      dockerfile: Dockerfile
     container_name: backend-clean-api
-    working_dir: /var/www/backend
+    working_dir: /app
     volumes:
-      - ./backend/:/var/www/backend
+      - ./backend/:/app
     networks:
       - clean-api-network
+    ports:
+      - "8080:8080"
 
-  # frontend:
-  #   build:
-  #     context: .
-  #     dockerfile: ./docker/node/Dockerfile
-  #     target: build
-  #   container_name: frontend-clean-api
-  #   volumes:
-  #     - ./frontend/:/app
-  #     - ./frontend/node_modules/:/app/node_modules
-  #   networks:
-  #     - clean-api-network
+  # Frontend builder - builds the Vue app to shared volume
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../docker/frontend/Dockerfile
+    container_name: frontend-clean-api
+    volumes:
+      - frontend-dist:/app/output
+      - /frontend/node_modules
+    networks:
+      - clean-api-network
 
   # MySQL database service
   db:
@@ -48,13 +52,15 @@ services:
     ports:
       - "80:80"
     volumes:
-      - ./backend/:/var/www/backend
-      # - ./frontend/dist/:/var/www/frontend
+      - ./backend/:/app
+      - frontend-dist:/frontend/output
       - ./docker/nginx/:/etc/nginx/conf.d/
       - ./backend/var/log/nginx/:/var/log/nginx/
-      # - ./frontend/log/vue/:/var/log/vue/
     networks:
       - clean-api-network
+    depends_on:
+      - backend
+      - frontend
 
 networks:
   clean-api-network:
@@ -62,3 +68,4 @@ networks:
 
 volumes:
   db-data:
+  frontend-dist:

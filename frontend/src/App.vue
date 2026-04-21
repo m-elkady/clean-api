@@ -1,17 +1,16 @@
 <template>
   <v-app>
     <v-main>
-      <v-navigation-drawer :width="281">
-        <v-list-item title="clean-api Frontend"></v-list-item>
-        <v-divider></v-divider>
-        <router-link to="/">
-          <v-list-item link title="Home"></v-list-item>
-        </router-link>
-        <router-link to="/users">
-          <v-list-item link title="Users"></v-list-item>
-        </router-link>
-        <v-divider></v-divider>
-        <template v-if="authStore.isAuthenticated">
+      <v-navigation-drawer :width="281" v-if="authStore.isAuthenticated">
+          <v-list-item title="clean-api Frontend"></v-list-item>
+          <v-divider></v-divider>
+          <router-link to="/">
+            <v-list-item link title="Home"></v-list-item>
+          </router-link>
+          <router-link to="/users">
+            <v-list-item link title="Users"></v-list-item>
+          </router-link>
+          <v-divider></v-divider>
           <v-list-item>
             <template #prepend>
               <v-avatar color="primary">
@@ -26,7 +25,6 @@
               <v-icon>mdi-logout</v-icon>
             </template>
           </v-list-item>
-        </template>
       </v-navigation-drawer>
       <router-view></router-view>
     </v-main>
@@ -34,9 +32,9 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import { useAuthStore } from '@/stores/auth';
+import {onMounted} from 'vue';
+import {useRouter} from 'vue-router';
+import {useAuthStore} from '@/stores/auth';
 
 const router = useRouter();
 const authStore = useAuthStore();

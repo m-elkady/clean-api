@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const apiClient = axios.create({
-  baseURL: 'http://clean-api.localhost',
+  baseURL: 'http://api.clean-api.me',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -49,7 +49,7 @@ apiClient.interceptors.response.use(
         originalRequest._retry = true;
 
         try {
-          const response = await axios.post('http://clean-api.localhost/auth/refresh', {
+          const response = await axios.post('http://api.clean-api.me/auth/refresh', {
             refresh_token: refreshToken,
           });
 

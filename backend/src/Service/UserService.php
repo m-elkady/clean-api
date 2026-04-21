@@ -115,7 +115,7 @@ class UserService
             'users' => $users,
             'count' => count($paginator),
             'currentPage' => $request->page,
-            'limit' => $request->perPage,
+            'perPage' => $request->perPage,
         ];
     }
 }

@@ -19,7 +19,7 @@ class UsersController extends BaseController
     {
     }
 
-    #[Route(path: '/', name: 'addUser', methods: 'POST')]
+    #[Route(name: 'addUser', methods: 'POST')]
     public function add(AddUserRequest $request): JsonResponse
     {
         $userDto = $this->userService->create($request);
@@ -59,7 +59,7 @@ class UsersController extends BaseController
         return AppResponse::noContent();
     }
 
-    #[Route(path: '/', name: 'paginateUsers', methods: 'GET')]
+    #[Route(name: 'paginateUsers', methods: 'GET')]
     public function paginate(PaginateUserRequest $request): JsonResponse
     {
         $result = $this->userService->paginate($request);
