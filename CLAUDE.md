@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Clean API is a full-stack application with Symfony 7.4/PHP 8.3+ backend and Vue 3/Vuetify frontend, demonstrating clean architecture patterns with clear separation of concerns. Includes JWT authentication with refresh tokens.
+Clean API is a full-stack application with Symfony 7.4/PHP 8.4 backend (via FrankenPHP in worker mode) and Vue 3/Vuetify frontend, demonstrating clean architecture patterns with clear separation of concerns. Includes JWT authentication with refresh tokens.
 
 ## Development Commands
 
@@ -115,7 +115,7 @@ Uses LexikJWTAuthenticationBundle with custom refresh token storage:
 
 | Container         | Purpose             | Access                                   |
 |-------------------|---------------------|------------------------------------------|
-| backend-clean-api | PHP 8.3-FPM         | `docker exec backend-clean-api ...`      |
+| backend-clean-api | FrankenPHP (PHP 8.4) | `docker exec backend-clean-api ...`    |
 | mysql-clean-api   | MySQL 5.7           | localhost:3306                           |
 | nginx-clean-api   | Nginx reverse proxy | http://clean-api.localhost (backend API) |
 | (frontend)        | Run locally for dev | http://localhost:3000                    |

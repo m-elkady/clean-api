@@ -1,0 +1,21 @@
+{
+    admin off
+    auto_https off
+}
+
+:8080 {
+    root * /app/public
+    php_server {
+        worker worker.php {
+            num 2
+        }
+    }
+    @static {
+        file
+        path *.ico *.css *.js *.png *.jpg *.jpeg *.gif *.svg *.woff *.woff2 *.ttf *.eot
+    }
+    handle @static {
+        file_server
+    }
+    encode gzip
+}
