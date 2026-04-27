@@ -4,19 +4,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Clean API is a full-stack application with Symfony 7.4/PHP 8.4 backend (via FrankenPHP in worker mode) and Vue 3/Vuetify frontend, demonstrating clean architecture patterns with clear separation of concerns. Includes JWT authentication with refresh tokens.
+Clean API is a full-stack application with Symfony 7.4/PHP 8.3+ backend (via FrankenPHP in worker mode) and Vue 3/Vuetify frontend, demonstrating clean architecture patterns with clear separation of concerns. Includes JWT authentication with refresh tokens.
+
+The frontend is built and served via Docker/Nginx - there is no local dev server.
 
 ## Development Commands
 
 ### Initial Setup
 ```bash
-make init              # Build containers, install deps, run migrations, load fixtures, start frontend
+make init              # Build containers, install deps, run migrations, load fixtures, build frontend
 ```
 
 ### Docker Operations
 ```bash
 make start             # Start all containers
 make stop              # Stop all containers
+make restart           # Restart all containers
 ```
 
 ### Backend (run inside container via `docker exec backend-clean-api`)
@@ -28,12 +31,23 @@ docker exec backend-clean-api php bin/phpunit                      # Run all tes
 docker exec backend-clean-api php bin/console cache:clear          # Clear cache
 ```
 
-### Frontend (run in local terminal)
+Or use Make shortcuts:
+```bash
+make test              # Run all tests
+make console <command> # Run any Symfony console command (e.g., make console cache:clear)
+```
+
+### Frontend
 ```bash
 cd frontend && npm install      # Install dependencies
-npm run dev                     # Start dev server (port 3000)
-npm run build                   # Build for production
+npm run build                   # Build for production (served by Nginx)
 npm run lint                    # Run ESLint with auto-fix
+```
+
+After making frontend changes, rebuild the frontend container:
+```bash
+docker-compose up -d --build frontend
+# Or use: make frontend-build
 ```
 
 ## Architecture
@@ -107,20 +121,32 @@ Uses LexikJWTAuthenticationBundle with custom refresh token storage:
 - **Vite + Vue 3** with manual routing in `src/router/index.js`
 - **Vuetify 3** component library with auto-import
 - **Pinia** for state management (auth store at `src/stores/auth.js`)
-- **Axios client** configured at `frontend/src/services/axios.js` (base URL: `http://clean-api.localhost`)
+- **Axios client** configured at `frontend/src/services/axios.js` (base URL: `http://api.clean-api.me`)
 - Routes: `/` (Hello), `/users` (UsersList), `/login` (Login) - all except `/login` require authentication
 - Navigation guard checks `auth.isAuthenticated` and redirects unauthenticated users to `/login`
 
+**Note:** Frontend is served via Docker/Nginx, not a local dev server.
+
 ### Docker Services
 
-| Container         | Purpose             | Access                                   |
-|-------------------|---------------------|------------------------------------------|
-| backend-clean-api | FrankenPHP (PHP 8.4) | `docker exec backend-clean-api ...`    |
-| mysql-clean-api   | MySQL 5.7           | localhost:3306                           |
-| nginx-clean-api   | Nginx reverse proxy | http://clean-api.localhost (backend API) |
-| (frontend)        | Run locally for dev | http://localhost:3000                    |
+| Container           | Purpose                        | Access                                   |
+|---------------------|--------------------------------|------------------------------------------|
+| backend-clean-api   | FrankenPHP (PHP 8.4)           | `docker exec backend-clean-api ...`    |
+| frontend-clean-api  | Frontend builder (Vue 3)       | `docker-compose up -d --build frontend` |
+| mysql-clean-api     | MySQL 5.7                      | localhost:3306                           |
+| nginx-clean-api     | Nginx reverse proxy            | http://clean-api.me (frontend)          |
+| nginx-clean-api     | Nginx reverse proxy            | http://api.clean-api.me (backend API)   |
 
-**Required hosts entry:** Add `127.0.0.1 clean-api.localhost` to `/etc/hosts`
+**Required hosts entry:** Add `127.0.0.1 clean-api.me api.clean-api.me` to `/etc/hosts`
+
+**Nginx configuration:**
+- `docker/nginx/default.conf`: Backend API proxy (api.clean-api.me → backend:8080)
+- `docker/nginx/frontend.conf`: Frontend static files (clean-api.me → /frontend/output)
+
+**FrankenPHP configuration:**
+- Configured in `docker/frankenphp/Caddyfile` with worker mode
+- Worker script at `backend/public/worker.php`
+- Runs 2 workers by default
 
 ### Database
 
@@ -157,3 +183,4 @@ When adding a new entity (e.g., Product):
 5. **Controller**: Create in `src/Controller/ProductsController.php`, add `#[Route]` attributes, inject Service
 6. **Migration**: Generate via `docker exec backend-clean-api php bin/console doctrine:migrations:generate`
 7. **Frontend**: Add axios methods in `src/services/axios.js`, create Vue components as needed
+8. **Rebuild frontend**: `docker-compose up -d --build frontend`

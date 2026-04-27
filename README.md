@@ -38,9 +38,9 @@ frontend, featuring JWT authentication with refresh tokens.
    cd clean-api
    ```
 
-2. **Add host entry**
+2. **Add host entries**
    ```bash
-   echo "127.0.0.1 clean-api.localhost" | sudo tee -a /etc/hosts
+   echo "127.0.0.1 clean-api.me api.clean-api.me" | sudo tee -a /etc/hosts
    ```
 
 3. **Initialize the project**
@@ -52,7 +52,7 @@ frontend, featuring JWT authentication with refresh tokens.
     - Install backend dependencies
     - Run database migrations
     - Load test fixtures
-    - Start the frontend dev server
+    - Build and serve the frontend via Nginx
 
 ## API Endpoints
 
@@ -80,7 +80,7 @@ frontend, featuring JWT authentication with refresh tokens.
 
 **Login:**
 ```bash
-POST http://clean-api.localhost/auth/login
+POST http://api.clean-api.me/auth/login
 Content-Type: application/json
 
 {
@@ -91,7 +91,7 @@ Content-Type: application/json
 
 **Create User:**
 ```bash
-POST http://clean-api.localhost/user
+POST http://api.clean-api.me/user
 Content-Type: application/json
 
 {
@@ -104,7 +104,7 @@ Content-Type: application/json
 
 **Pagination:**
 ```bash
-GET http://clean-api.localhost/user?page=1&perPage=10&sortBy=firstName&order=desc&email=john
+GET http://api.clean-api.me/user?page=1&perPage=10&sortBy=firstName&order=desc&email=john
 Authorization: Bearer <access_token>
 ```
 
@@ -131,22 +131,27 @@ docker exec backend-clean-api php bin/console doctrine:fixtures:load
 ```bash
 cd frontend
 
-# Start dev server
-npm run dev
+# Install dependencies
+npm install
 
-# Build for production
+# Build for production (served by Nginx)
 npm run build
 
 # Lint code
 npm run lint
 ```
 
+Note: The frontend is built and served automatically by Docker/Nginx. After making changes, rebuild the frontend container:
+```bash
+docker-compose up -d --build frontend
+```
+
 ## Access
 
-| Service     | URL                        |
-|-------------|----------------------------|
-| Backend API | http://clean-api.localhost |
-| Frontend    | http://localhost:3000      |
+| Service     | URL                      |
+|-------------|--------------------------|
+| Backend API | http://api.clean-api.me  |
+| Frontend    | http://clean-api.me      |
 
 ## License
 
