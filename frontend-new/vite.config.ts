@@ -1,18 +1,12 @@
 import vue from '@vitejs/plugin-vue'
 import { fileURLToPath } from 'node:url'
-import { PrimeVueResolver } from '@primevue/auto-import-resolver'
-import Components from 'unplugin-vue-components/vite'
-import UnoCSS from 'unocss/vite'
+import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'vite'
 
 export default defineConfig({
   plugins: [
     vue(),
-    UnoCSS(),
-    Components({
-      resolvers: [PrimeVueResolver()],
-      dts: true,
-    }),
+    tailwindcss(),
   ],
   resolve: {
     alias: {
