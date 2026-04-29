@@ -21,6 +21,7 @@ class UserFixture extends Fixture
             $user->setFirstName('user First name' . $i);
             $user->setLastName('user Last name' . $i);
             $user->setEmail('user' . $i . '@example.com');
+            $user->setRoles(['ROLE_USER']);
 
             $hashedPassword = $this->passwordHasher->hashPassword($user, '123456');
             $user->setPassword($hashedPassword);
