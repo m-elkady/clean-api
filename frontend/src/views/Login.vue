@@ -1,102 +1,136 @@
 <template>
-  <v-container class="fill-height">
-    <v-responsive class="align-center text-center fill-height">
-      <v-card class="mx-auto" max-width="400" flat>
-        <v-card-title class="text-h4 text-center">Login</v-card-title>
+  <div class="flex min-h-screen items-center justify-center bg-background px-4 relative">
+    <!-- Theme Toggle -->
+    <Button
+      @click="toggleTheme"
+      variant="ghost"
+      size="icon"
+      class="absolute top-4 right-4"
+      :title="resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'"
+    >
+      <Sun v-if="resolvedTheme === 'dark'" class="h-5 w-5" />
+      <Moon v-else class="h-5 w-5" />
+    </Button>
 
-        <v-card-text>
-          <v-form ref="form" @submit.prevent="handleLogin">
-            <v-text-field
+    <Card class="w-full max-w-md">
+      <CardHeader>
+        <CardTitle class="text-2xl text-center">Login</CardTitle>
+      </CardHeader>
+
+      <CardContent>
+        <form @submit.prevent="handleLogin" class="space-y-4">
+          <div class="space-y-2">
+            <Label for="email">Email</Label>
+            <Input
+              id="email"
               v-model="email"
-              label="Email"
               type="email"
-              variant="outlined"
-              :rules="emailRules"
+              placeholder="Enter your email"
               :disabled="loading"
-              class="mb-2"
+              autocomplete="email"
             />
+            <p v-if="emailError" class="text-sm text-destructive">{{ emailError }}</p>
+          </div>
 
-            <v-text-field
-              v-model="password"
-              label="Password"
-              type="password"
-              variant="outlined"
-              :rules="passwordRules"
-              :disabled="loading"
-              class="mb-4"
-            />
+          <div class="space-y-2">
+            <Label for="password">Password</Label>
+            <div class="relative">
+              <Input
+                id="password"
+                v-model="password"
+                :type="showPassword ? 'text' : 'password'"
+                placeholder="Enter your password"
+                :disabled="loading"
+                autocomplete="current-password"
+                class="pr-10"
+              />
+              <button
+                type="button"
+                @click="showPassword = !showPassword"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <Eye v-if="!showPassword" class="h-4 w-4" />
+                <EyeOff v-else class="h-4 w-4" />
+              </button>
+            </div>
+            <p v-if="passwordError" class="text-sm text-destructive">{{ passwordError }}</p>
+          </div>
 
-            <v-btn
-              type="submit"
-              color="primary"
-              size="large"
-              block
-              :loading="loading"
-            >
-              Login
-            </v-btn>
-          </v-form>
-        </v-card-text>
+          <Button
+            type="submit"
+            class="w-full"
+            :disabled="loading || !isFormValid"
+          >
+            <Loader2 v-if="loading" class="mr-2 h-4 w-4 animate-spin" />
+            {{ loading ? 'Signing in...' : 'Login' }}
+          </Button>
 
-        <v-alert
-          v-if="error"
-          type="error"
-          closable
-          class="mx-4 mt-4"
-          @click:close="error = null"
-        >
-          {{ error }}
-        </v-alert>
-      </v-card>
-    </v-responsive>
-  </v-container>
+          <div v-if="error" class="rounded-md bg-destructive/15 p-3">
+            <p class="text-sm text-destructive">{{ error }}</p>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
+  </div>
 </template>
 
-<script setup>
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
-import { useAuthStore } from '@/stores/auth';
+<script setup lang="ts">
+import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { Eye, EyeOff, Loader2, Sun, Moon } from 'lucide-vue-next'
+import { useAuth } from '@/composables/useAuth'
+import { useTheme } from '@/composables/useTheme'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 
-const router = useRouter();
-const authStore = useAuthStore();
+const router = useRouter()
+const { login } = useAuth()
+const { resolvedTheme, toggleTheme } = useTheme()
 
-const email = ref('');
-const password = ref('');
-const loading = ref(false);
-const error = ref(null);
+const email = ref('')
+const password = ref('')
+const loading = ref(false)
+const error = ref<string | null>(null)
+const showPassword = ref(false)
 
-const emailRules = [
-  (v) => !!v || 'Email is required',
-  (v) => /.+@.+\..+/.test(v) || 'Email must be valid',
-];
+const emailError = computed(() => {
+  if (!email.value) return 'Email is required'
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) return 'Email must be valid'
+  return ''
+})
 
-const passwordRules = [
-  (v) => !!v || 'Password is required',
-  (v) => (v && v.length >= 6) || 'Password must be at least 6 characters',
-];
+const passwordError = computed(() => {
+  if (!password.value) return 'Password is required'
+  if (password.value.length < 6) return 'Password must be at least 6 characters'
+  return ''
+})
+
+const isFormValid = computed(() => !emailError.value && !passwordError.value)
 
 async function handleLogin() {
-  error.value = null;
+  if (!isFormValid.value) return
+
+  error.value = null
+  loading.value = true
 
   try {
-    loading.value = true;
-    await authStore.login(email.value, password.value);
-    router.push('/');
-  } catch (err) {
-    const errors = err.response?.data?.errors;
-    if (errors) {
-      if (typeof errors === 'string') {
-        error.value = errors;
-      } else if (errors.message) {
-        error.value = errors.message;
-      } else {
-        error.value = 'Login failed. Please check your credentials.';
-      }
+    await login({ email: email.value, password: password.value })
+
+    const redirect = router.currentRoute.value.query.redirect as string | undefined
+    router.push(redirect || '/')
+  } catch (err: unknown) {
+    const response = (err as { response?: { data?: { errors?: unknown } } })?.response?.data?.errors
+    if (typeof response === 'string') {
+      error.value = response
+    } else if (response && typeof response === 'object' && 'message' in response) {
+      error.value = String(response.message)
     } else {
-      error.value = 'Network error. Please try again.';
+      error.value = 'Login failed. Please check your credentials.'
     }
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 </script>
