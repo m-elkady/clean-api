@@ -14,4 +14,4 @@ RUN npm ci
 COPY . .
 
 # Run build at container startup to /output (clear old files first)
-CMD ["sh", "-c", "rm -rf /app/output/* && npm run build -- --outDir=/app/output && tail -f /dev/null"]
+CMD ["sh", "-c", "npm run build && tail -f /dev/null"]
